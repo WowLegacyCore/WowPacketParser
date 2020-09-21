@@ -380,10 +380,10 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
             var bit12 = packet.ReadBit();
 
             if (bit4)
-                packet.ReadInt32("VirtualRealmAddress");
+                packet.ReadInt32_Sanitize("VirtualRealmAddress");
 
             if (bit12)
-                packet.ReadInt32("NativeRealmAddress");
+                packet.ReadInt32_Sanitize("NativeRealmAddress");
         }
 
         [Parser(Opcode.SMSG_QUERY_PLAYER_NAME_RESPONSE)]
@@ -409,7 +409,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
                 packet.ReadPackedGuid128("BnetAccountID");
                 packet.ReadPackedGuid128("Player Guid");
 
-                packet.ReadUInt32("VirtualRealmAddress");
+                packet.ReadUInt32_Sanitize("VirtualRealmAddress");
 
                 packet.ReadByteE<Race>("Race");
                 packet.ReadByteE<Gender>("Gender");
@@ -569,7 +569,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
         public static void HandleRequestInspectPVP(Packet packet)
         {
             packet.ReadPackedGuid128("InspectTarget");
-            packet.ReadInt32("InspectRealmAddress");
+            packet.ReadInt32_Sanitize("InspectRealmAddress");
         }
 
         [Parser(Opcode.SMSG_INSPECT_PVP)]

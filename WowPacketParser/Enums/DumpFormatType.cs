@@ -15,6 +15,7 @@
         HexOnly,
         PktDirectionSplit,
         ConnectionIndexes,
-        Fusion
+        Fusion,
+        SanitizedPkt
     }
 }

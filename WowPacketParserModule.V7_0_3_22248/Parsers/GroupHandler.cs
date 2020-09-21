@@ -31,7 +31,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             packet.ResetBitReader();
 
             var len = packet.ReadBits(8);
-            packet.ReadWoWString("PetName", len, index);
+            packet.ReadWoWString_Sanitize("PetName", len, index);
         }
 
         [Parser(Opcode.SMSG_PARTY_MEMBER_STATE)]
@@ -90,8 +90,8 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             var lenTargetName = packet.ReadBits(9);
             var lenTargetRealm = packet.ReadBits(9);
 
-            packet.ReadWoWString("TargetName", lenTargetName);
-            packet.ReadWoWString("TargetRealm", lenTargetRealm);
+            packet.ReadWoWString_Sanitize("TargetName", lenTargetName);
+            packet.ReadWoWString_Sanitize("TargetRealm", lenTargetRealm);
         }
 
         [Parser(Opcode.SMSG_PARTY_INVITE)]
@@ -105,13 +105,13 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             var len = packet.ReadBits(6);
 
             packet.ResetBitReader();
-            packet.ReadInt32("InviterVirtualRealmAddress");
+            packet.ReadInt32_Sanitize("InviterVirtualRealmAddress");
             packet.ReadBit("IsLocal");
             packet.ReadBit("Unk2");
             var bits2 = packet.ReadBits(8);
             var bits258 = packet.ReadBits(8);
-            packet.ReadWoWString("InviterRealmNameActual", bits2);
-            packet.ReadWoWString("InviterRealmNameNormalized", bits258);
+            packet.ReadWoWString_Sanitize("InviterRealmNameActual", bits2);
+            packet.ReadWoWString_Sanitize("InviterRealmNameNormalized", bits258);
 
             packet.ReadPackedGuid128("InviterGuid");
             packet.ReadPackedGuid128("InviterBNetAccountID");
@@ -119,7 +119,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             packet.ReadInt32("ProposedRoles");
             var lfgSlots = packet.ReadInt32();
             packet.ReadInt32("LfgCompletedMask");
-            packet.ReadWoWString("InviterName", len);
+            packet.ReadWoWString_Sanitize("InviterName", len);
             for (int i = 0; i < lfgSlots; i++)
                 packet.ReadInt32("LfgSlots", i);
         }
@@ -156,7 +156,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
                 packet.ReadByte("RolesAssigned", i);
                 packet.ReadByteE<Class>("Class", i);
 
-                packet.ReadWoWString("Name", playerNameLength, i);
+                packet.ReadWoWString_Sanitize("Name", playerNameLength, i);
             }
 
             packet.ResetBitReader();
@@ -230,7 +230,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
                 {
                     packet.ResetBitReader();
                     var len = packet.ReadBits(8);
-                    packet.ReadWoWString("NewPetName", len, "Pet");
+                    packet.ReadWoWString_Sanitize("NewPetName", len, "Pet");
                 }
                 if (petGuidChanged)
                     packet.ReadPackedGuid128("NewPetGuid", "Pet");

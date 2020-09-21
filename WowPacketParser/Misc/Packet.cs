@@ -31,6 +31,7 @@ namespace WowPacketParser.Misc
             FileName = fileName;
             Status = ParsedStatus.None;
             WriteToFile = true;
+            BinaryWriter = new BinaryWriter(BaseStream);
 
             if (number == 0)
                 _firstPacketTime = Time;
@@ -50,6 +51,7 @@ namespace WowPacketParser.Misc
             FileName = fileName;
             Status = ParsedStatus.None;
             WriteToFile = true;
+            BinaryWriter = new BinaryWriter(BaseStream);
 
             if (number == 0)
                 _firstPacketTime = Time;
@@ -68,6 +70,8 @@ namespace WowPacketParser.Misc
         public bool WriteToFile { get; private set; }
         public int ConnectionIndex { get; set; }
         public IPEndPoint EndPoint { get; set; }
+        public byte[] Header { get; set; }
+        public BinaryWriter BinaryWriter { get; }
 
         public void AddSniffData(StoreNameType type, int id, string data)
         {

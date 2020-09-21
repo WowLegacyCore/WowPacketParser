@@ -156,7 +156,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
                 }
             }
 
-            packet.ReadWoWString("Name", nameLength, idx);
+            packet.ReadWoWString_Sanitize("Name", nameLength, idx);
         }
 
         public static void ReadRuneData(Packet packet, params object[] idx)
@@ -526,7 +526,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
         {
             packet.ReadPackedGuid128("ResurrectOffererGUID");
 
-            packet.ReadUInt32("ResurrectOffererVirtualRealmAddress");
+            packet.ReadUInt32_Sanitize("ResurrectOffererVirtualRealmAddress");
             packet.ReadUInt32("PetNumber");
             packet.ReadInt32<SpellId>("SpellID");
 
@@ -535,7 +535,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             packet.ReadBit("UseTimer");
             packet.ReadBit("Sickness");
 
-            packet.ReadWoWString("Name", len);
+            packet.ReadWoWString_Sanitize("Name", len);
         }
 
         [Parser(Opcode.SMSG_TOTEM_CREATED, ClientVersionBuild.V7_1_0_22900)]

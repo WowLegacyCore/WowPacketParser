@@ -30,10 +30,10 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
                 declinedNameLen[i] = (int)packet.ReadBits(7);
 
             for (var i = 0; i < maxDeclinedNameCases; ++i)
-                packet.ReadWoWString("DeclinedNames", declinedNameLen[i], i);
+                packet.ReadWoWString_Sanitize("DeclinedNames", declinedNameLen[i], i);
 
             packet.ReadTime("Timestamp");
-            packet.ReadWoWString("Pet name", len);
+            packet.ReadWoWString_Sanitize("Pet name", len);
         }
 
         public static void ReadPetAction(Packet packet, params object[] indexes)
@@ -127,10 +127,10 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
                     count[i] = (int)packet.ReadBits(7);
 
                 for (var i = 0; i < 5; ++i)
-                    packet.ReadWoWString("DeclinedNames", count[i], i);
+                    packet.ReadWoWString_Sanitize("DeclinedNames", count[i], i);
             }
 
-            packet.ReadWoWString("NewName", bits20);
+            packet.ReadWoWString_Sanitize("NewName", bits20);
         }
 
         [Parser(Opcode.SMSG_PET_NAME_INVALID)]
@@ -224,7 +224,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
             packet.ResetBitReader();
 
             var len = packet.ReadBits(8);
-            packet.ReadWoWString("PetName", len, indexes);
+            packet.ReadWoWString_Sanitize("PetName", len, indexes);
         }
 
         [Parser(Opcode.SMSG_PET_STABLE_LIST)]

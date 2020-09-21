@@ -39,7 +39,7 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 packet.ReadByte("RolesAssigned", i);
                 packet.ReadByteE<Class>("Class", i);
 
-                packet.ReadWoWString("Name", playerNameLength, i);
+                packet.ReadWoWString_Sanitize("Name", playerNameLength, i);
                 packet.ReadDynamicString("VoiceStateID", voiceStateLength, i);
             }
 

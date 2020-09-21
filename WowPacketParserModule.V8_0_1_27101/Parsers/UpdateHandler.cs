@@ -45,8 +45,10 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                         {
                             var updatefieldSize = packet.ReadUInt32();
                             var handler = CoreFields.UpdateFields.GetHandler();
+                            var startPositionPacket = packet.BaseStream.Position;
                             using (var fieldsData = new Packet(packet.ReadBytes((int)updatefieldSize), packet.Opcode, packet.Time, packet.Direction, packet.Number, packet.Writer, packet.FileName))
                             {
+                                var startPositionFieldsData = fieldsData.BaseStream.Position;
                                 WoWObject obj;
                                 Storage.Objects.TryGetValue(guid, out obj);
 
@@ -98,6 +100,15 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                                     if (conversation != null)
                                         conversation.ConversationData = data;
                                 }
+
+                                if (Settings.DumpFormat == DumpFormatType.SanitizedPkt)
+                                {
+                                    packet.BaseStream.Position = startPositionPacket;
+                                    fieldsData.BaseStream.Position = startPositionFieldsData;
+
+                                    // Update the original packet with the sanitized fieldData
+                                    packet.BinaryWriter.Write(fieldsData.ReadBytes((int)updatefieldSize));
+                                }
                             }
                         }
                         else
@@ -147,8 +158,10 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V8_1_0_28724))
             {
                 var updatefieldSize = packet.ReadUInt32();
+                var startPositionPacket = packet.BaseStream.Position;
                 using (var fieldsData = new Packet(packet.ReadBytes((int)updatefieldSize), packet.Opcode, packet.Time, packet.Direction, packet.Number, packet.Writer, packet.FileName))
                 {
+                    var startPositionFieldsData = fieldsData.BaseStream.Position;
                     var flags = fieldsData.ReadByteE<UpdateFieldFlag>("FieldFlags", index);
                     var handler = CoreFields.UpdateFields.GetHandler();
                     obj.ObjectData = handler.ReadCreateObjectData(fieldsData, flags, index);
@@ -199,6 +212,15 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                         case ObjectType.Conversation:
                             (obj as ConversationTemplate).ConversationData = handler.ReadCreateConversationData(fieldsData, flags, index);
                             break;
+                    }
+
+                    if (Settings.DumpFormat == DumpFormatType.SanitizedPkt)
+                    {
+                        packet.BaseStream.Position = startPositionPacket;
+                        fieldsData.BaseStream.Position = startPositionFieldsData;
+
+                        // Update the original packet with the sanitized fieldData
+                        packet.BinaryWriter.Write(fieldsData.ReadBytes((int)updatefieldSize));
                     }
                 }
             }

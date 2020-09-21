@@ -21,8 +21,8 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             packet.ReadPackedGuid128("SenderGuildGUID");
             packet.ReadPackedGuid128("WowAccountGUID");
             text.ReceiverGUID = packet.ReadPackedGuid128("TargetGUID");
-            packet.ReadUInt32("TargetVirtualAddress");
-            packet.ReadUInt32("SenderVirtualAddress");
+            packet.ReadUInt32_Sanitize("TargetVirtualAddress");
+            packet.ReadUInt32_Sanitize("SenderVirtualAddress");
             packet.ReadPackedGuid128("PartyGUID");
             packet.ReadInt32("AchievementID");
             packet.ReadSingle("DisplayTime");
@@ -42,20 +42,25 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             packet.ReadBit("FakeSenderName");
             bool unk801bit = packet.ReadBit("Unk801_Bit");
 
-            text.SenderName = packet.ReadWoWString("Sender Name", senderNameLen);
-            text.ReceiverName = packet.ReadWoWString("Receiver Name", receiverNameLen);
-            packet.ReadWoWString("Addon Message Prefix", prefixLen);
-            packet.ReadWoWString("Channel Name", channelLen);
-
-            text.Text = packet.ReadWoWString("Text", textLen);
-            if (unk801bit)
-                packet.ReadUInt32("Unk801");
+            text.SenderName = packet.ReadWoWString_Sanitize("Sender Name", senderNameLen);
+            text.ReceiverName = packet.ReadWoWString_Sanitize("Receiver Name", receiverNameLen);
 
             uint entry = 0;
             if (text.SenderGUID.GetObjectType() == ObjectType.Unit)
                 entry = text.SenderGUID.GetEntry();
             else if (text.ReceiverGUID.GetObjectType() == ObjectType.Unit)
                 entry = text.ReceiverGUID.GetEntry();
+
+            packet.ReadWoWString("Addon Message Prefix", prefixLen);
+            packet.ReadWoWString("Channel Name", channelLen);
+
+            if (entry != 0)
+                text.Text = packet.ReadWoWString("Text", textLen);
+            else
+                text.Text = packet.ReadWoWString_Sanitize("Text", textLen);
+
+            if (unk801bit)
+                packet.ReadUInt32("Unk801");
 
             if (entry != 0)
                 Storage.CreatureTexts.Add(entry, text, packet.TimeSpan);

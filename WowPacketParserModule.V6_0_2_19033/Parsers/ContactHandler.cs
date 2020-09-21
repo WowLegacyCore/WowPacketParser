@@ -26,7 +26,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
 
         public static void ReadQualifiedGUID(Packet packet, params object[] indexes)
         {
-            packet.ReadInt32("VirtualRealmAddress", indexes);
+            packet.ReadInt32_Sanitize("VirtualRealmAddress", indexes);
             packet.ReadPackedGuid128("Guid", indexes);
         }
 
@@ -46,7 +46,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
             packet.ReadPackedGuid128("Guid");
             packet.ReadPackedGuid128("WowAccount");
 
-            packet.ReadInt32("VirtualRealmAddress");
+            packet.ReadInt32_Sanitize("VirtualRealmAddress");
 
             packet.ReadByteE<ContactStatus>("Status");
 
@@ -67,8 +67,8 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
             packet.ReadPackedGuid128("Guid", index);
             packet.ReadPackedGuid128("WowAccount", index);
 
-            packet.ReadUInt32("VirtualRealmAddr", index);
-            packet.ReadUInt32("NativeRealmAddr", index);
+            packet.ReadUInt32_Sanitize("VirtualRealmAddr", index);
+            packet.ReadUInt32_Sanitize("NativeRealmAddr", index);
             packet.ReadUInt32("TypeFlags", index);
 
             packet.ReadByte("Status", index);

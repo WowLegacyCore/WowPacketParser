@@ -21,8 +21,8 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
 
             packet.ReadUInt32("ScrollOfResurrectionRequestsRemaining");
             packet.ReadUInt32("ScrollOfResurrectionMaxRequestsPerDay");
-            packet.ReadUInt32("CfgRealmID");
-            packet.ReadInt32("CfgRealmRecID");
+            packet.ReadUInt32_Sanitize("CfgRealmID");
+            packet.ReadInt32_Sanitize("CfgRealmRecID");
 
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V8_2_5_31921))
             {
@@ -193,7 +193,7 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
         public static void HandleQueryCommunityName(Packet packet)
         {
             packet.ReadPackedGuid128("BNetAccountGUID");
-            packet.ReadUInt64("CommunityDbID");
+            packet.ReadUInt64_Sanitize("CommunityDbID");
         }
 
         [Parser(Opcode.SMSG_UPDATE_EXPANSION_LEVEL)]
@@ -240,32 +240,32 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 }
 
                 for (var j = 0; j < 5; ++j)
-                    packet.ReadWoWString("DeclinedNames", declinedNamesLen[j], i, j);
+                    packet.ReadWoWString_Sanitize("DeclinedNames", declinedNamesLen[j], i, j);
 
                 packet.ReadPackedGuid128("AccountID", i);
                 packet.ReadPackedGuid128("BnetAccountID", i);
                 packet.ReadPackedGuid128("GuidActual", i);
 
-                packet.ReadUInt64("GuildClubMemberID", i);
-                packet.ReadUInt32("VirtualRealmAddress", i);
+                packet.ReadUInt64_Sanitize("GuildClubMemberID", i);
+                packet.ReadUInt32_Sanitize("VirtualRealmAddress", i);
 
                 packet.ReadByteE<Race>("Race", i);
                 packet.ReadByteE<Gender>("Sex", i);
                 packet.ReadByteE<Class>("ClassId", i);
                 packet.ReadByte("Level", i);
 
-                packet.ReadWoWString("Name", bits15, i);
+                packet.ReadWoWString_Sanitize("Name", bits15, i);
 
                 packet.ReadPackedGuid128("GuildGUID", i);
 
-                packet.ReadInt32("GuildVirtualRealmAddress", i);
+                packet.ReadInt32_Sanitize("GuildVirtualRealmAddress", i);
                 packet.ReadInt32<AreaId>("AreaID", i);
 
                 packet.ResetBitReader();
                 var bits460 = packet.ReadBits(7);
                 packet.ReadBit("IsGM", i);
 
-                packet.ReadWoWString("GuildName", bits460, i);
+                packet.ReadWoWString_Sanitize("GuildName", bits460, i);
             }
         }
 
