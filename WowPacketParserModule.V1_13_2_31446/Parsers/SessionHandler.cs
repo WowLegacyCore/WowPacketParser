@@ -101,5 +101,27 @@ namespace WowPacketParserModule.V1_13_2_31446.Parsers
                 packet.ReadBit("HasFCM");
             }
         }
+
+        [Parser(Opcode.SMSG_REALM_QUERY_RESPONSE)]
+        public static void HandleRealmQueryResponse(Packet packet)
+        {
+            packet.ReadUInt32("VirtualRealmAddress");
+
+            var state = packet.ReadByte("LookupState");
+            if (state == 0)
+            {
+                packet.ResetBitReader();
+
+                packet.ReadBit("IsLocal");
+                packet.ReadBit("Unk bit");
+
+                var realmNameLen = packet.ReadBits(8);
+                var realmNameNormalizedLen = packet.ReadBits(8);
+                packet.ReadBit();
+
+                packet.ReadWoWString("RealmNameActual", realmNameLen);
+                packet.ReadWoWString("RealmNameNormalized", realmNameNormalizedLen);
+            }
+        }
     }
 }
