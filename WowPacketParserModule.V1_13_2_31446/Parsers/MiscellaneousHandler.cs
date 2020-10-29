@@ -25,25 +25,25 @@ namespace WowPacketParserModule.V1_13_2_31446.Parsers
             packet.ReadBit("LiveRegionCharacterListEnabled");
             packet.ReadBit("LiveRegionCharacterCopyEnabled");
             packet.ReadBit("LiveRegionAccountCopyEnabled");
-            packet.ReadBit("UnkBit1");
-            var unkBit2 = packet.ReadBit("UnkBit2");
+            packet.ReadBit("NameReservationEnabled");
+            var hasLaunchETA = packet.ReadBit("HasLaunchETA");
 
             packet.ReadUInt32("TokenPollTimeSeconds");
             packet.ReadUInt32E<ConsumableTokenRedeem>("TokenRedeemIndex");
             packet.ReadInt64("TokenBalanceAmount");
             packet.ReadInt32("MaxCharactersPerRealm");
-
-            if (ClientVersion.AddedInVersion(ClientVersionBuild.V1_13_3_32790)) // no idea when this was added exactly
-                packet.ReadInt32("UnkInt");
-
+            var liveRegionCopyCount = packet.ReadInt32("LiveRegionCopySourceRegionCount");
             packet.ReadUInt32("BpayStoreProductDeliveryDelay");
             packet.ReadInt32("ActiveCharacterUpgradeBoostType");
             packet.ReadInt32("ActiveClassTrialBoostType");
             packet.ReadInt32("MinimumExpansionLevel");
             packet.ReadInt32("MaximumExpansionLevel");
 
-            if (unkBit2)
-                packet.ReadInt32("UnkBit2_Int32");
+            if (hasLaunchETA)
+                packet.ReadInt32("LaunchETA");
+
+            for (var i = 0; i < liveRegionCopyCount; ++i)
+                packet.ReadInt32("RegionID");
         }
 
         [Parser(Opcode.CMSG_TUTORIAL_FLAG)]
