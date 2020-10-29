@@ -108,10 +108,10 @@ namespace WowPacketParserModule.V1_13_2_31446.Parsers
             packet.ReadInt32("HealthDelta");
 
             for (var i = 0; i < 6; i++)
-                packet.ReadInt32("PowerDelta", (PowerType)i);
+                packet.ReadInt32E<PowerType>("PowerDelta", i);
 
             for (var i = 0; i < 5; i++)
-                packet.ReadInt32("StatDelta", (StatType)i);
+                packet.ReadInt32E<StatType>("StatDelta", i);
 
             packet.ReadInt32("NumNewTalents");
             packet.ReadInt32("NumNewPvpTalentSlots");
