@@ -533,8 +533,6 @@ namespace WowPacketParser.Enums.Version.V1_13_6_36231
         {
             // {Opcode.SMSG_PET_NEWLY_TAMED, 0x0000},         // Removed?
             // {Opcode.SMSG_BATTLEFIELD_PORT_DENIED, 0x0000}, // Removed?
-            // {Opcode.SMSG_PVP_SEASON, 0x0000},              // Removed?
-
             {Opcode.SMSG_ABORT_NEW_WORLD, 0x25AD},
             {Opcode.SMSG_ACCOUNT_CRITERIA_UPDATE, 0x2653},
             {Opcode.SMSG_ACCOUNT_DATA_TIMES, 0x2751},
@@ -1204,8 +1202,10 @@ namespace WowPacketParser.Enums.Version.V1_13_6_36231
             {Opcode.SMSG_PVP_CREDIT, 0x271F},
             {Opcode.SMSG_PVP_LOG_DATA, 0x25B3},
             {Opcode.SMSG_PVP_OPTIONS_ENABLED, 0x25B6},
+            {Opcode.SMSG_PVP_SEASON, 0x25D3},
             {Opcode.SMSG_QUERY_BATTLE_PET_NAME_RESPONSE, 0x270C},
             {Opcode.SMSG_QUERY_CREATURE_RESPONSE, 0x2702},
+            {Opcode.SMSG_QUERY_GAME_OBJECT_RESPONSE, 0x2703},
             {Opcode.SMSG_QUERY_GUILD_INFO_RESPONSE, 0x29E5},
             {Opcode.SMSG_QUERY_ITEM_TEXT_RESPONSE, 0x2811},
             {Opcode.SMSG_QUERY_NPC_TEXT_RESPONSE, 0x2706},
