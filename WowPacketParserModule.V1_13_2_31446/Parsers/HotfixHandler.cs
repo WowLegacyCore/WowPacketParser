@@ -104,5 +104,20 @@ namespace WowPacketParserModule.V1_13_2_31446.Parsers
                 packet.AddValue("TableHash", (DB2Hash)Utilities.PAIR64_HIPART(id), i);
             }
         }
+
+        [Parser(Opcode.CMSG_DB_QUERY_BULK)]
+        public static void HandleDbQueryBulk(Packet packet)
+        {
+            packet.ReadInt32E<DB2Hash>("TableHash");
+
+            packet.ReadBit("Allow?");
+            var count = packet.ReadBits("Count", 5);
+
+            for (var i = 0; i < count; ++i)
+            {
+                packet.ReadPackedGuid128("Guid", i);
+                packet.ReadInt32("RecordID", i);
+            }
+        }
     }
 }
