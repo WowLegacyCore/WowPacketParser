@@ -32,7 +32,7 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             if (hasSrcLoc)
                 V6_0_2_19033.Parsers.SpellHandler.ReadLocation(packet, "SrcLocation");
 
-            var dstLocation = new Vector3();
+            Vector3? dstLocation = null;
             if (hasDstLoc)
                 dstLocation = V6_0_2_19033.Parsers.SpellHandler.ReadLocation(packet, "DstLocation");
 
@@ -59,9 +59,9 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                             {
                                 ID = spellID,
                                 EffectIndex = (byte)i,
-                                PositionX = dstLocation.X,
-                                PositionY = dstLocation.Y,
-                                PositionZ = dstLocation.Z,
+                                PositionX = dstLocation.Value.X,
+                                PositionY = dstLocation.Value.Y,
+                                PositionZ = dstLocation.Value.Z,
                                 MapID = (ushort)mapID,
                                 EffectHelper = effectHelper
                             };
@@ -390,7 +390,12 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             packet.ReadPackedGuid128("CastID");
             packet.ReadPackedGuid128("Target");
             packet.ReadInt32<SpellId>("SpellID");
+        }
 
+        [Parser(Opcode.SMSG_INTERRUPT_POWER_REGEN)]
+        public static void HandleInterruptPowerRegen(Packet packet)
+        {
+            packet.ReadUInt32("PowerTypeEnum");
         }
     }
 }

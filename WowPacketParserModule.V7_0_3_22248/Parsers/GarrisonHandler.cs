@@ -1,4 +1,3 @@
-using System.Reflection.Emit;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Parsing;
@@ -91,13 +90,19 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
 
         public static void ReadGarrisonMissionReward(Packet packet, params object[] indexes)
         {
-            packet.ReadInt32<ItemId>("ItemId", indexes);
-            packet.ReadUInt32("Quantity", indexes);
-            packet.ReadInt32<CurrencyId>("CurrencyId", indexes);
+            packet.ResetBitReader();
+            packet.ReadInt32<ItemId>("ItemID", indexes);
+            packet.ReadUInt32("ItemQuantity", indexes);
+            packet.ReadInt32<CurrencyId>("CurrencyID", indexes);
             packet.ReadUInt32("CurrencyQuantity", indexes);
-            packet.ReadUInt32("FollowerXp", indexes);
-            packet.ReadUInt32("BonusAbilityId", indexes);
+            packet.ReadUInt32("FollowerXP", indexes);
+            packet.ReadUInt32("GarrMssnBonusAbilityID", indexes);
             packet.ReadInt32("ItemFileDataID", indexes);
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_0_2_36639))
+            {
+                if (packet.ReadBit())
+                    Substructures.ItemHandler.ReadItemInstance(packet, indexes, "ItemInstance");
+            }
         }
 
         public static void ReadGarrisonFollowerCategoryInfo(Packet packet, params object[] indexes)
@@ -457,8 +462,8 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             packet.ReadUInt32("AbilityID");
         }
 
-        [Parser(Opcode.CMSG_GARRISON_MISSION_REQUEST_REWARD_INFO)]
-        public static void HandleGarrisonMissionRequestRewardInfo(Packet packet)
+        [Parser(Opcode.CMSG_GARRISON_GET_MISSION_REWARD)]
+        public static void HandleGarrisonGetMissionReward(Packet packet)
         {
             packet.ReadUInt64("Unk1"); // Money ?
             packet.ReadUInt32("Unk2");
@@ -479,8 +484,8 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             packet.ReadUInt32("FollowerID");
         }
 
-        [Parser(Opcode.CMSG_GARRISON_REQUEST_CLASS_SPEC_CATEGORY_INFO)]
-        public static void HandleGarrisonRequestClassSpecCategoryInfo(Packet packet)
+        [Parser(Opcode.CMSG_GARRISON_GET_CLASS_SPEC_CATEGORY_INFO)]
+        public static void HandleGarrisonGetClassSpecCategoryInfo(Packet packet)
         {
             packet.ReadUInt32E<GarrisonFollowerType>("GarrFollowerTypeId");
         }

@@ -23,3 +23,5 @@ packages/*
 
 wpp.tgz
 cov-int
+
+.idea
