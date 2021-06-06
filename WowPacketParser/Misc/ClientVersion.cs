@@ -746,6 +746,8 @@ namespace WowPacketParser.Misc
                 case ClientVersionBuild.V1_13_7_38631:
                 case ClientVersionBuild.V1_13_7_38704:
                     return ClientVersionBuild.V1_13_2_31446;
+                case ClientVersionBuild.V2_5_1_38835:
+                    return ClientVersionBuild.V2_5_1_38835;
                 case ClientVersionBuild.BattleNetV37165:
                     return ClientVersionBuild.BattleNetV37165;
                 case ClientVersionBuild.Zero:
@@ -767,6 +769,8 @@ namespace WowPacketParser.Misc
         {
             switch (definingbuild)
             {
+                case ClientVersionBuild.V2_5_1_38835:
+                    return ClientVersionBuild.V9_0_1_36216;
                 case ClientVersionBuild.V1_13_2_31446:
                     return ClientVersionBuild.V8_0_1_27101;
                 case ClientVersionBuild.V7_0_3_22248:
@@ -790,6 +794,8 @@ namespace WowPacketParser.Misc
         {
             if (IsClassicClientVersionBuild(build))
                 return ClientType.Classic;
+            if (IsBurningCrusadeClassicVersionBuild(build))
+                return ClientType.BurningCrusadeClassic;
             if (build >= ClientVersionBuild.V9_0_1_36216)
                 return ClientType.Shadowlands;
             if (build >= ClientVersionBuild.V8_0_1_27101)
@@ -954,6 +960,15 @@ namespace WowPacketParser.Misc
                 default:
                     return false;
             }
+        }
+
+        public static bool IsBurningCrusadeClassicVersionBuild(ClientVersionBuild build)
+        {
+            return build switch
+            {
+                ClientVersionBuild.V2_5_1_38835 => true,
+                _                               => false
+            };
         }
     }
 }
