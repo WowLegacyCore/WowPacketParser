@@ -52,5 +52,28 @@ namespace WowPacketParser.Misc
                 throw new ArgumentOutOfRangeException("0x" + type.ToString("X"));
             return ConvDict801[type];
         }
+
+        private static readonly Dictionary<ObjectType251, ObjectType> ConvDict251 = new()
+        {
+            { ObjectType251.Object,                 ObjectType.Object },
+            { ObjectType251.Item,                   ObjectType.Item },
+            { ObjectType251.Container,              ObjectType.Container },
+            { ObjectType251.Unit,                   ObjectType.Unit },
+            { ObjectType251.Player,                 ObjectType.Player },
+            { ObjectType251.ActivePlayer,           ObjectType.ActivePlayer },
+            { ObjectType251.GameObject,             ObjectType.GameObject },
+            { ObjectType251.DynamicObject,          ObjectType.DynamicObject },
+            { ObjectType251.Corpse,                 ObjectType.Corpse },
+            { ObjectType251.AreaTrigger,            ObjectType.AreaTrigger },
+            { ObjectType251.SceneObject,            ObjectType.SceneObject },
+            { ObjectType251.Conversation,           ObjectType.Conversation }
+        };
+
+        public static ObjectType Convert(ObjectType251 type)
+        {
+            if (!ConvDict251.ContainsKey(type))
+                throw new ArgumentOutOfRangeException("0x" + type.ToString("X"));
+            return ConvDict251[type];
+        }
     }
 }

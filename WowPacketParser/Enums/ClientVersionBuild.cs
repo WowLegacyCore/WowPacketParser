@@ -394,6 +394,8 @@ namespace WowPacketParser.Enums
 
         // Burning Crusade Classic
         V2_5_1_38835  = 38835,
+        V2_5_1_39475  = 39475,
+        V2_5_1_39399  = 39399,
 
         // Battle.net - should probably not mix this but oh well
         BattleNetV37165 = 37165,
