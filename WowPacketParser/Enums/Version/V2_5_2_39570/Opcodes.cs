@@ -762,6 +762,7 @@ namespace WowPacketParser.Enums.Version.V2_5_2_39570
             {Opcode.SMSG_SEND_ITEM_PASSIVES, 0x25AB},
             {Opcode.SMSG_WORLD_SERVER_INFO, 0x25AC},
             {Opcode.SMSG_ACCOUNT_TOY_UPDATE, 0x25AE},
+            {Opcode.SMSG_ACCOUNT_HEIRLOOM_UPDATE, 0x25AF},
             {Opcode.SMSG_RUNE_REGEN_DEBUG, 0x25B3},
             {Opcode.SMSG_VENDOR_INVENTORY, 0x25B5},
             {Opcode.SMSG_SET_PLAY_HOVER_ANIM, 0x25B7},
