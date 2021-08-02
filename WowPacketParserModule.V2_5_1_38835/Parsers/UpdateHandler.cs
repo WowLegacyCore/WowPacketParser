@@ -216,9 +216,6 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
 
                         var pointsCount = packet.ReadBits("PointsCount", 16, index);
 
-                        if (ClientVersion.RemovedInVersion(ClientType.Shadowlands))
-                            packet.ReadBitsE<SplineMode>("Mode", 2, index);
-
                         var hasSplineFilterKey = packet.ReadBit("HasSplineFilterKey", index);
                         var hasSpellEffectExtraData = packet.ReadBit("HasSpellEffectExtraData", index);
                         var hasJumpExtraData = packet.ReadBit("HasJumpExtraData", index);

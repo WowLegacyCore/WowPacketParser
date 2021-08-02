@@ -325,7 +325,7 @@ namespace WowPacketParser.Enums.Version.V2_5_1_38835
             {Opcode.CMSG_KEEP_ALIVE, 0x3681},
             {Opcode.CMSG_KEYBOUND_OVERRIDE, 0x3220},
             {Opcode.CMSG_LEARN_PVP_TALENTS, 0x3554},
-            {Opcode.CMSG_LEARN_TALENTS, 0x3551},
+            {Opcode.CMSG_LEARN_TALENT, 0x3551},
             {Opcode.CMSG_LEAVE_GROUP, 0x364C},
             {Opcode.CMSG_LEAVE_PET_BATTLE_QUEUE, 0x31DF},
             {Opcode.CMSG_LF_GUILD_ADD_RECRUIT, 0x361C},

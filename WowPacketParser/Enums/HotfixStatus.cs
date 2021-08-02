@@ -4,6 +4,6 @@
     {
         Valid         = 1,
         RecordRemoved = 2,
-        Invalid       = 3 
+        Invalid       = 3
     }
 }
