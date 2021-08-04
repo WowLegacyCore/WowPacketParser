@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
+using WowPacketParser.PacketStructures;
 using WowPacketParser.Parsing;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
+using WoWPacketParser.Proto;
 using CoreParsers = WowPacketParser.Parsing.Parsers;
 
 namespace WowPacketParserModule.V2_5_1_38835.Parsers
@@ -14,6 +16,7 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
         [Parser(Opcode.SMSG_UPDATE_OBJECT)]
         public static void HandleUpdateObject(Packet packet)
         {
+            var updateObject = packet.Holder.UpdateObject = new();
             var count = packet.ReadUInt32("NumObjUpdates");
             var map = packet.ReadUInt16<MapId>("MapID");
 
@@ -26,9 +29,17 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
                 var outOfRangeObjCount = removedObjCount - destroyedObjCount;
 
                 for (var i = 0; i < destroyedObjCount; i++)
-                    packet.ReadPackedGuid128("ObjectGUID", "Destroyed", i);
+                {
+                    var partWriter = new StringBuilderProtoPart(packet.Writer);
+                    var guid = packet.ReadPackedGuid128("ObjectGUID", "Destroyed", i);
+                    updateObject.Destroyed.Add(new DestroyedObject() { Guid = guid, Text = partWriter.Text });
+                }
                 for (var i = 0; i < outOfRangeObjCount; i++)
-                    packet.ReadPackedGuid128("ObjectGUID", "OutOfRange", i);
+                {
+                    var partWriter = new StringBuilderProtoPart(packet.Writer);
+                    var guid = packet.ReadPackedGuid128("ObjectGUID", "OutOfRange", i);
+                    updateObject.OutOfRange.Add(new DestroyedObject() { Guid = guid, Text = partWriter.Text });
+                }
             }
 
             packet.ReadUInt32("DataSize");
@@ -36,20 +47,27 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
             {
                 var type = packet.ReadByteE<UpdateTypeCataclysm>("UpdateType", i);
                 var guid = packet.ReadPackedGuid128("ObjectGuid", i);
+
+                var partWriter = new StringBuilderProtoPart(packet.Writer);
                 switch (type)
                 {
                     case UpdateTypeCataclysm.Values:
-                        CoreParsers.UpdateHandler.ReadValuesUpdateBlock(packet, guid, i);
+                        var updateValues = new UpdateValues();
+                        CoreParsers.UpdateHandler.ReadValuesUpdateBlock(packet, updateValues, guid, i);
+                        updateObject.Updated.Add(new UpdateObject() { Guid = guid, Values = updateValues, Text = partWriter.Text });
                         break;
                     case UpdateTypeCataclysm.CreateObject1:
                     case UpdateTypeCataclysm.CreateObject2:
-                        ReadCreateObjectBlock(packet, guid, map, i);
+                        var createObject = new CreateObject() { Guid = guid, Values = new() };
+                        ReadCreateObjectBlock(packet, createObject,  guid, map, i);
+                        createObject.Text = partWriter.Text;
+                        updateObject.Created.Add(createObject);
                         break;
                 }
             }
         }
 
-        private static void ReadCreateObjectBlock(Packet packet, WowGuid guid, uint map, object index)
+        private static void ReadCreateObjectBlock(Packet packet, CreateObject createObject,  WowGuid guid, uint map, object index)
         {
             var objType = ObjectTypeConverter.Convert(packet.ReadByteE<ObjectType251>("ObjectType", index));
             var obj = objType switch
@@ -64,9 +82,9 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
 
             packet.ReadInt32("HeirFlags", index);
 
-            var moves = ReadMovementUpdateBlock(packet, guid, obj, index);
+            var moves = ReadMovementUpdateBlock(packet, createObject, guid, obj, index);
 
-            var updates = CoreParsers.UpdateHandler.ReadValuesUpdateBlockOnCreate(packet, objType, index);
+            var updates = CoreParsers.UpdateHandler.ReadValuesUpdateBlockOnCreate(packet, createObject.Values, objType, index);
             var dynamicUpdates = CoreParsers.UpdateHandler.ReadDynamicValuesUpdateBlockOnCreate(packet, objType, index);
             obj.UpdateFields = updates;
             obj.DynamicUpdateFields = dynamicUpdates;
@@ -94,7 +112,7 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
                 packet.AddSniffData(Utilities.ObjectTypeToStore(objType), (int)guid.GetEntry(), "SPAWN");
         }
 
-        private static MovementInfo ReadMovementUpdateBlock(Packet packet, WowGuid guid, WoWObject obj, object index)
+        private static MovementInfo ReadMovementUpdateBlock(Packet packet, CreateObject createObject, WowGuid guid, WoWObject obj, object index)
         {
             var moveInfo = new MovementInfo();
 
@@ -124,18 +142,19 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
 
             if (hasMovementUpdate)
             {
+                var movementUpdate = createObject.Movement = new();
                 packet.ResetBitReader();
-                packet.ReadPackedGuid128("MoverGUID", index);
+                movementUpdate.Mover = packet.ReadPackedGuid128("MoverGUID", index);
 
-                packet.ReadUInt32("MoveTime", index);
-                moveInfo.Position = packet.ReadVector3("Position", index);
-                moveInfo.Orientation = packet.ReadSingle("Orientation", index);
+                movementUpdate.MoveTime = packet.ReadUInt32("MoveTime", index);
+                movementUpdate.Position = moveInfo.Position = packet.ReadVector3("Position", index);
+                movementUpdate.Orientation = moveInfo.Orientation = packet.ReadSingle("Orientation", index);
 
-                packet.ReadSingle("Pitch", index);
-                packet.ReadSingle("StepUpStartElevation", index);
+                movementUpdate.Pitch = packet.ReadSingle("Pitch", index);
+                movementUpdate.StepUpStartElevation = packet.ReadSingle("StepUpStartElevation", index);
 
                 var removeForcesIDsCount = packet.ReadInt32();
-                packet.ReadInt32("MoveIndex", index);
+                movementUpdate.MoveIndex = packet.ReadInt32("MoveIndex", index);
 
                 for (var i = 0; i < removeForcesIDsCount; i++)
                     packet.ReadPackedGuid128("RemoveForcesIDs", index, i);
@@ -150,13 +169,13 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
                 packet.ReadBit("RemoteTimeValid", index);
 
                 if (hasTransport)
-                    ReadTransportData(moveInfo, guid, packet, index);
+                    movementUpdate.Transport = ReadTransportData(moveInfo, guid, packet, index);
 
                 if (hasFall)
                 {
                     packet.ResetBitReader();
-                    packet.ReadUInt32("Fall Time", index);
-                    packet.ReadSingle("JumpVelocity", index);
+                    movementUpdate.FallTime = packet.ReadUInt32("Fall Time", index);
+                    movementUpdate.JumpVelocity = packet.ReadSingle("JumpVelocity", index);
 
                     var hasFallDirection = packet.ReadBit("Has Fall Direction", index);
                     if (hasFallDirection)
@@ -166,8 +185,8 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
                     }
                 }
 
-                moveInfo.WalkSpeed = packet.ReadSingle("WalkSpeed", index) / 2.5f;
-                moveInfo.RunSpeed = packet.ReadSingle("RunSpeed", index) / 7.0f;
+                movementUpdate.WalkSpeed = moveInfo.WalkSpeed = packet.ReadSingle("WalkSpeed", index) / 2.5f;
+                movementUpdate.RunSpeed = moveInfo.RunSpeed = packet.ReadSingle("RunSpeed", index) / 7.0f;
                 packet.ReadSingle("RunBackSpeed", index);
                 packet.ReadSingle("SwimSpeed", index);
                 packet.ReadSingle("SwimBackSpeed", index);
@@ -196,20 +215,22 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
 
                 if (moveInfo.HasSplineData)
                 {
+                    var splineData = movementUpdate.SplineData = new();
                     packet.ResetBitReader();
-                    packet.ReadInt32("ID", index);
-                    packet.ReadVector3("Destination", index);
+                    splineData.Id = packet.ReadInt32("ID", index);
+                    splineData.Destination = packet.ReadVector3("Destination", index);
 
                     var hasMovementSplineMove = packet.ReadBit("MovementSplineMove", index);
                     if (hasMovementSplineMove)
                     {
+                        var moveData = splineData.MoveData = new();
                         packet.ResetBitReader();
 
-                        packet.ReadUInt32E<SplineFlag>("SplineFlags", index);
-                        packet.ReadInt32("Elapsed", index);
-                        packet.ReadUInt32("Duration", index);
-                        packet.ReadSingle("DurationModifier", index);
-                        packet.ReadSingle("NextDurationModifier", index);
+                        moveData.Flags = packet.ReadUInt32E<SplineFlag>("SplineFlags", index).ToUniversal();
+                        moveData.Elapsed = packet.ReadInt32("Elapsed", index);
+                        moveData.Duration = packet.ReadUInt32("Duration", index);
+                        moveData.DurationModifier = packet.ReadSingle("DurationModifier", index);
+                        moveData.NextDurationModifier = packet.ReadSingle("NextDurationModifier", index);
 
                         var face = packet.ReadBits("Face", 2, index);
                         var hasSpecialTime = packet.ReadBit("HasSpecialTime", index);
@@ -237,13 +258,13 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
                         switch (face)
                         {
                             case 1:
-                                packet.ReadVector3("FaceSpot", index);
+                                moveData.LookPosition = packet.ReadVector3("FaceSpot", index);
                                 break;
                             case 2:
-                                packet.ReadPackedGuid128("FaceGUID", index);
+                                moveData.LookTarget = new() { Target = packet.ReadPackedGuid128("FaceGUID", index) };
                                 break;
                             case 3:
-                                packet.ReadSingle("FaceDirection", index);
+                                moveData.LookOrientation = packet.ReadSingle("FaceDirection", index);
                                 break;
                             default:
                                 break;
@@ -253,13 +274,13 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
                             packet.ReadUInt32("SpecialTime", index);
 
                         for (var i = 0; i < pointsCount; ++i)
-                            packet.ReadVector3("Points", index, i);
+                            moveData.Points.Add(packet.ReadVector3("Points", index, i));
 
                         if (hasSpellEffectExtraData)
                             V8_0_1_27101.Parsers.MovementHandler.ReadMonsterSplineSpellEffectExtraData(packet, index);
 
                         if (hasJumpExtraData)
-                            V8_0_1_27101.Parsers.MovementHandler.ReadMonsterSplineJumpExtraData(packet, index);
+                            moveData.Jump = V8_0_1_27101.Parsers.MovementHandler.ReadMonsterSplineJumpExtraData(packet, index);
 
                         if (hasAnimationTierTransition)
                         {
@@ -281,6 +302,7 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
 
                 packet.AddValue("Stationary Position", moveInfo.Position, index);
                 packet.AddValue("Stationary Orientation", moveInfo.Orientation, index);
+                createObject.Stationary = new() { Position = moveInfo.Position, Orientation = moveInfo.Orientation };
             }
 
             if (hasCombatVictim)
@@ -291,8 +313,10 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
 
             if (hasVehicleCreate)
             {
+                var vehicle = createObject.Vehicle = new();
                 moveInfo.VehicleId = (uint)packet.ReadInt32("RecID", index);
-                packet.ReadSingle("InitialRawFacing", index);
+                vehicle.VehicleId = (int)moveInfo.VehicleId;
+                vehicle.InitialRawFacing = packet.ReadSingle("InitialRawFacing", index);
             }
 
             if (hasAnimKitCreate)
@@ -313,13 +337,13 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
             }
 
             if (hasRotation)
-                moveInfo.Rotation = packet.ReadPackedQuaternion("GameObject Rotation", index);
+                createObject.Rotation = moveInfo.Rotation = packet.ReadPackedQuaternion("GameObject Rotation", index);
 
             for (var i = 0; i < pauseTimesCount; ++i)
                 packet.ReadUInt32("PauseTimes", index, i);
 
             if (hasMovementTransport)
-                ReadTransportData(moveInfo, guid, packet, index);
+                createObject.Transport = ReadTransportData(moveInfo, guid, packet, index);
 
             if (hasAreaTrigger && obj is SpellAreaTrigger)
             {
@@ -610,22 +634,24 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
             return moveInfo;
         }
 
-        public static void ReadTransportData(MovementInfo moveInfo, WowGuid guid, Packet packet, object index)
+        public static MovementUpdateTransport ReadTransportData(MovementInfo moveInfo, WowGuid guid, Packet packet, object index)
         {
+            MovementUpdateTransport transport = new();
             packet.ResetBitReader();
-            moveInfo.TransportGuid = packet.ReadPackedGuid128("TransportGUID", index);
-            moveInfo.TransportOffset = packet.ReadVector4("TransportPosition", index);
+            transport.TransportGuid = moveInfo.TransportGuid = packet.ReadPackedGuid128("TransportGUID", index);
+            transport.Position = moveInfo.TransportOffset = packet.ReadVector4("TransportPosition", index);
             var seat = packet.ReadByte("VehicleSeatIndex", index);
-            packet.ReadUInt32("MoveTime", index);
+            transport.Seat = seat;
+            transport.MoveTime = packet.ReadUInt32("MoveTime", index);
 
             var hasPrevMoveTime = packet.ReadBit("HasPrevMoveTime", index);
             var hasVehicleRecID = packet.ReadBit("HasVehicleRecID", index);
 
             if (hasPrevMoveTime)
-                packet.ReadUInt32("PrevMoveTime", index);
+                transport.PrevMoveTime = packet.ReadUInt32("PrevMoveTime", index);
 
             if (hasVehicleRecID)
-                packet.ReadInt32("VehicleRecID", index);
+                transport.VehicleId = packet.ReadInt32("VehicleRecID", index);
 
             if (moveInfo.TransportGuid.HasEntry() && moveInfo.TransportGuid.GetHighType() == HighGuidType.Vehicle &&
                 guid.HasEntry() && guid.GetHighType() == HighGuidType.Creature)
@@ -638,6 +664,8 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
                 };
                 Storage.VehicleTemplateAccessories.Add(vehicleAccessory, packet.TimeSpan);
             }
+
+            return transport;
         }
     }
 }

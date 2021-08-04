@@ -47,7 +47,7 @@ namespace WowPacketParserModule.V2_5_1_38835.Parsers
             for (var i = 0; i < missStatusCount; ++i)
                 V6_0_2_19033.Parsers.SpellHandler.ReadSpellMissStatus(packet, idx, "MissStatus", i);
 
-            V8_0_1_27101.Parsers.SpellHandler.ReadSpellTargetData(packet, (uint)spellID, idx, "Target");
+            V8_0_1_27101.Parsers.SpellHandler.ReadSpellTargetData(packet, null, (uint)spellID, idx, "Target");
 
             for (var i = 0; i < hitTargetsCount; ++i)
                 packet.ReadPackedGuid128("HitTarget", idx, i);
