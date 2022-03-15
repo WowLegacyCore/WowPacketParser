@@ -1049,100 +1049,92 @@ namespace WowPacketParser.Misc
 
         public static bool IsClassicVanillaClientVersionBuild(ClientVersionBuild build)
         {
-            switch (build)
+            return build switch
             {
-                case ClientVersionBuild.V1_13_2_31446:
-                case ClientVersionBuild.V1_13_2_31650:
-                case ClientVersionBuild.V1_13_2_31687:
-                case ClientVersionBuild.V1_13_2_31727:
-                case ClientVersionBuild.V1_13_2_31830:
-                case ClientVersionBuild.V1_13_2_31882:
-                case ClientVersionBuild.V1_13_2_32089:
-                case ClientVersionBuild.V1_13_2_32421:
-                case ClientVersionBuild.V1_13_2_32600:
-                case ClientVersionBuild.V1_13_3_32790:
-                case ClientVersionBuild.V1_13_3_32836:
-                case ClientVersionBuild.V1_13_3_32887:
-                case ClientVersionBuild.V1_13_3_33155:
-                case ClientVersionBuild.V1_13_3_33302:
-                case ClientVersionBuild.V1_13_3_33526:
-                case ClientVersionBuild.V1_13_4_33598:
-                case ClientVersionBuild.V1_13_4_33645:
-                case ClientVersionBuild.V1_13_4_33728:
-                case ClientVersionBuild.V1_13_4_33920:
-                case ClientVersionBuild.v1_13_4_34219:
-                case ClientVersionBuild.v1_13_4_34266:
-                case ClientVersionBuild.v1_13_4_34600:
-                case ClientVersionBuild.v1_13_5_34713:
-                case ClientVersionBuild.v1_13_5_34911:
-                case ClientVersionBuild.V1_13_5_35100:
-                case ClientVersionBuild.V1_13_5_35186:
-                case ClientVersionBuild.V1_13_5_35753:
-                case ClientVersionBuild.V1_13_5_36035:
-                case ClientVersionBuild.V1_13_5_36325:
-                case ClientVersionBuild.v1_13_6_36231:
-                case ClientVersionBuild.V1_13_6_36324:
-                case ClientVersionBuild.V1_13_6_36497:
-                case ClientVersionBuild.V1_13_6_36524:
-                case ClientVersionBuild.V1_13_6_36611:
-                case ClientVersionBuild.V1_13_6_36714:
-                case ClientVersionBuild.V1_13_6_36935:
-                case ClientVersionBuild.V1_13_6_37497:
-                case ClientVersionBuild.V1_13_7_38363:
-                case ClientVersionBuild.V1_13_7_38386:
-                case ClientVersionBuild.V1_13_7_38475:
-                case ClientVersionBuild.V1_13_7_38631:
-                case ClientVersionBuild.V1_13_7_38704:
-                case ClientVersionBuild.V1_13_7_39605:
-                case ClientVersionBuild.V1_13_7_39692:
-                {
-                    return true;
-                }
-                default:
-                    return false;
-            }
+                ClientVersionBuild.V1_13_2_31446 => true,
+                ClientVersionBuild.V1_13_2_31650 => true,
+                ClientVersionBuild.V1_13_2_31687 => true,
+                ClientVersionBuild.V1_13_2_31727 => true,
+                ClientVersionBuild.V1_13_2_31830 => true,
+                ClientVersionBuild.V1_13_2_31882 => true,
+                ClientVersionBuild.V1_13_2_32089 => true,
+                ClientVersionBuild.V1_13_2_32421 => true,
+                ClientVersionBuild.V1_13_2_32600 => true,
+                ClientVersionBuild.V1_13_3_32790 => true,
+                ClientVersionBuild.V1_13_3_32836 => true,
+                ClientVersionBuild.V1_13_3_32887 => true,
+                ClientVersionBuild.V1_13_3_33155 => true,
+                ClientVersionBuild.V1_13_3_33302 => true,
+                ClientVersionBuild.V1_13_3_33526 => true,
+                ClientVersionBuild.V1_13_4_33598 => true,
+                ClientVersionBuild.V1_13_4_33645 => true,
+                ClientVersionBuild.V1_13_4_33728 => true,
+                ClientVersionBuild.V1_13_4_33920 => true,
+                ClientVersionBuild.v1_13_4_34219 => true,
+                ClientVersionBuild.v1_13_4_34266 => true,
+                ClientVersionBuild.v1_13_4_34600 => true,
+                ClientVersionBuild.v1_13_5_34713 => true,
+                ClientVersionBuild.v1_13_5_34911 => true,
+                ClientVersionBuild.V1_13_5_35100 => true,
+                ClientVersionBuild.V1_13_5_35186 => true,
+                ClientVersionBuild.V1_13_5_35753 => true,
+                ClientVersionBuild.V1_13_5_36035 => true,
+                ClientVersionBuild.V1_13_5_36325 => true,
+                ClientVersionBuild.v1_13_6_36231 => true,
+                ClientVersionBuild.V1_13_6_36324 => true,
+                ClientVersionBuild.V1_13_6_36497 => true,
+                ClientVersionBuild.V1_13_6_36524 => true,
+                ClientVersionBuild.V1_13_6_36611 => true,
+                ClientVersionBuild.V1_13_6_36714 => true,
+                ClientVersionBuild.V1_13_6_36935 => true,
+                ClientVersionBuild.V1_13_6_37497 => true,
+                ClientVersionBuild.V1_13_7_38363 => true,
+                ClientVersionBuild.V1_13_7_38386 => true,
+                ClientVersionBuild.V1_13_7_38475 => true,
+                ClientVersionBuild.V1_13_7_38631 => true,
+                ClientVersionBuild.V1_13_7_38704 => true,
+                ClientVersionBuild.V1_13_7_39605 => true,
+                ClientVersionBuild.V1_13_7_39692 => true,
+                _ => false
+            };
         }
 
         public static bool IsBurningCrusadeClassicClientVersionBuild(ClientVersionBuild build)
         {
-            switch (build)
+            return build switch
             {
-                case ClientVersionBuild.V2_5_1_38598:
-                case ClientVersionBuild.V2_5_1_38644:
-                case ClientVersionBuild.V2_5_1_38707:
-                case ClientVersionBuild.V2_5_1_38741:
-                case ClientVersionBuild.V2_5_1_38757:
-                case ClientVersionBuild.V2_5_1_38835:
-                case ClientVersionBuild.V2_5_1_38892:
-                case ClientVersionBuild.V2_5_1_38921:
-                case ClientVersionBuild.V2_5_1_38988:
-                case ClientVersionBuild.V2_5_1_39170:
-                case ClientVersionBuild.V2_5_1_39475:
-                case ClientVersionBuild.V2_5_1_39603:
-                case ClientVersionBuild.V2_5_1_39640:
-                case ClientVersionBuild.V2_5_2_39570:
-                case ClientVersionBuild.V2_5_2_39618:
-                case ClientVersionBuild.V2_5_2_39926:
-                case ClientVersionBuild.V2_5_2_40011:
-                case ClientVersionBuild.V2_5_2_40045:
-                case ClientVersionBuild.V2_5_2_40203:
-                case ClientVersionBuild.V2_5_2_40260:
-                case ClientVersionBuild.V2_5_2_40422:
-                case ClientVersionBuild.V2_5_2_40488:
-                case ClientVersionBuild.V2_5_2_40617:
-                case ClientVersionBuild.V2_5_2_40892:
-                case ClientVersionBuild.V2_5_2_41446:
-                case ClientVersionBuild.V2_5_2_41510:
-                case ClientVersionBuild.V2_5_3_41812:
-                case ClientVersionBuild.V2_5_3_42083:
-                case ClientVersionBuild.V2_5_3_42328:
-                case ClientVersionBuild.V2_5_3_42598:
-                {
-                    return true;
-                }
-                default:
-                    return false;
-            }
+                ClientVersionBuild.V2_5_1_38598 => true,
+                ClientVersionBuild.V2_5_1_38644 => true,
+                ClientVersionBuild.V2_5_1_38707 => true,
+                ClientVersionBuild.V2_5_1_38741 => true,
+                ClientVersionBuild.V2_5_1_38757 => true,
+                ClientVersionBuild.V2_5_1_38835 => true,
+                ClientVersionBuild.V2_5_1_38892 => true,
+                ClientVersionBuild.V2_5_1_38921 => true,
+                ClientVersionBuild.V2_5_1_38988 => true,
+                ClientVersionBuild.V2_5_1_39170 => true,
+                ClientVersionBuild.V2_5_1_39475 => true,
+                ClientVersionBuild.V2_5_1_39603 => true,
+                ClientVersionBuild.V2_5_1_39640 => true,
+                ClientVersionBuild.V2_5_2_39570 => true,
+                ClientVersionBuild.V2_5_2_39618 => true,
+                ClientVersionBuild.V2_5_2_39926 => true,
+                ClientVersionBuild.V2_5_2_40011 => true,
+                ClientVersionBuild.V2_5_2_40045 => true,
+                ClientVersionBuild.V2_5_2_40203 => true,
+                ClientVersionBuild.V2_5_2_40260 => true,
+                ClientVersionBuild.V2_5_2_40422 => true,
+                ClientVersionBuild.V2_5_2_40488 => true,
+                ClientVersionBuild.V2_5_2_40617 => true,
+                ClientVersionBuild.V2_5_2_40892 => true,
+                ClientVersionBuild.V2_5_2_41446 => true,
+                ClientVersionBuild.V2_5_2_41510 => true,
+                ClientVersionBuild.V2_5_3_41812 => true,
+                ClientVersionBuild.V2_5_3_42083 => true,
+                ClientVersionBuild.V2_5_3_42328 => true,
+                ClientVersionBuild.V2_5_3_42598 => true,
+                _ => false
+            };
         }
     }
 }
