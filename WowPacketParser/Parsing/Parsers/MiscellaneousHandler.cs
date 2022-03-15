@@ -1,9 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using WowPacketParser.Enums;
-using WowPacketParser.Enums.Version;
 using WowPacketParser.Misc;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
 
@@ -393,7 +392,9 @@ namespace WowPacketParser.Parsing.Parsers
         [Parser(Opcode.SMSG_TRIGGER_MOVIE)]
         public static void HandleTriggerSequence(Packet packet)
         {
-            packet.ReadInt32("Sequence Id");
+            packet.ReadInt32("CinematicID");
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_5_40772))
+                packet.ReadPackedGuid128("ConversationGuid");
         }
 
         [Parser(Opcode.SMSG_PLAY_SOUND)]
@@ -405,7 +406,7 @@ namespace WowPacketParser.Parsing.Parsers
 
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V4_3_0_15005))
                 packetPlaySound.Source = packet.ReadGuid("GUID").ToUniversalGuid();
-            
+
             Storage.Sounds.Add(sound, packet.TimeSpan);
         }
 
@@ -431,7 +432,7 @@ namespace WowPacketParser.Parsing.Parsers
 
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V4_3_0_15005))
                 packetMusic.Target = packet.ReadGuid("GUID").ToUniversalGuid();
-            
+
             Storage.Sounds.Add(sound, packet.TimeSpan);
         }
 
@@ -939,13 +940,13 @@ namespace WowPacketParser.Parsing.Parsers
             }
 
             if (hasMovementFlags)
-                packet.ReadBitsE<MovementFlag>("Movement Flags", 30);
+                packet.ReadBitsE<Enums.v4.MovementFlag>("Movement Flags", 30);
 
             if (hasFallData)
                 hasFallDirection = packet.ReadBit();
 
             if (hasMovementFlags2)
-                packet.ReadBitsE<MovementFlagExtra>("Extra Movement Flags", 12);
+                packet.ReadBitsE<Enums.v4.MovementFlag2>("Extra Movement Flags", 12);
 
             packet.ReadXORByte(guid, 5);
             packet.ReadXORByte(guid, 3);
@@ -1115,7 +1116,7 @@ namespace WowPacketParser.Parsing.Parsers
             animKit.Unit = packet.ReadPackedGuid("Guid");
             animKit.AnimKit = packet.ReadUInt16("AnimKit.dbc Id");
         }
-        
+
         [Parser(Opcode.SMSG_SET_AI_ANIM_KIT)]
         public static void HandleSetAiAnimKit(Packet packet)
         {
@@ -1123,7 +1124,7 @@ namespace WowPacketParser.Parsing.Parsers
             animKit.Unit = packet.ReadPackedGuid("Guid");
             animKit.AnimKit = packet.ReadUInt16("AnimKit.dbc Id");
         }
-        
+
         [Parser(Opcode.SMSG_SET_MELEE_ANIM_KIT)]
         [Parser(Opcode.SMSG_SET_MOVEMENT_ANIM_KIT)]
         public static void HandleMeleeAnimKit(Packet packet)
@@ -1131,7 +1132,7 @@ namespace WowPacketParser.Parsing.Parsers
             packet.ReadPackedGuid("Guid");
             packet.ReadUInt16("AnimKit.dbc Id");
         }
-        
+
         [Parser(Opcode.CMSG_QUERY_COUNTDOWN_TIMER)]
         public static void HandleQueryCountdownTimer(Packet packet)
         {

@@ -1,7 +1,7 @@
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Parsing;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using CoreParsers = WowPacketParser.Parsing.Parsers;
 
@@ -9,6 +9,12 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
 {
     public static class MiscellaneousHandler
     {
+        public static void ReadGameRuleValuePair(Packet packet, params object[] indexes)
+        {
+            packet.ReadInt32("Rule", indexes);
+            packet.ReadInt32("Value", indexes);
+        }
+
         [Parser(Opcode.SMSG_FEATURE_SYSTEM_STATUS)]
         public static void HandleFeatureSystemStatus(Packet packet)
         {
@@ -30,6 +36,16 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             packet.ReadUInt32("BpayStoreProductDeliveryDelay");
             packet.ReadUInt32("ClubsPresenceUpdateTimer");
             packet.ReadUInt32("HiddenUIClubsPresenceUpdateTimer");
+
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+            {
+                packet.ReadInt32("GameRuleUnknown1");
+                var gameRuleValuesCount = packet.ReadUInt32("GameRuleValuesCount");
+                packet.ReadInt16("MaxPlayerNameQueriesPerPacket");
+
+                for (var i = 0; i < gameRuleValuesCount; ++i)
+                    ReadGameRuleValuePair(packet, "GameRuleValues");
+            }
 
             packet.ResetBitReader();
             packet.ReadBit("VoiceEnabled");
@@ -64,6 +80,14 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             packet.ReadBit("IsMuted");
             packet.ReadBit("ClubFinderEnabled");
             packet.ReadBit("Unknown901CheckoutRelated");
+
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_5_40772))
+            {
+                packet.ReadBit("TextToSpeechFeatureEnabled");
+                packet.ReadBit("ChatDisabledByDefault");
+                packet.ReadBit("ChatDisabledByPlayer");
+                packet.ReadBit("LFGListCustomRequiresAuthenticator");
+            }
 
             {
                 packet.ResetBitReader();
@@ -105,6 +129,12 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             }
         }
 
+        [Parser(Opcode.SMSG_FEATURE_SYSTEM_STATUS2)]
+        public static void HandleFeatureSystemStatus2(Packet packet)
+        {
+            packet.ReadBit("TextToSpeechFeatureEnabled");
+        }
+
         [Parser(Opcode.SMSG_FEATURE_SYSTEM_STATUS_GLUE_SCREEN)]
         public static void HandleFeatureSystemStatusGlueScreen(Packet packet)
         {
@@ -142,8 +172,20 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             packet.ReadInt32("MinimumExpansionLevel");
             packet.ReadInt32("MaximumExpansionLevel");
 
+            var gameRuleValuesCount = 0u;
+
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+            {
+                packet.ReadInt32("GameRuleUnknown1");
+                gameRuleValuesCount = packet.ReadUInt32("GameRuleValuesCount");
+                packet.ReadInt16("MaxPlayerNameQueriesPerPacket");
+            }
+
             for (int i = 0; i < liveRegionCharacterCopySourceRegionsCount; i++)
                 packet.ReadUInt32("LiveRegionCharacterCopySourceRegion", i);
+
+            for (var i = 0; i < gameRuleValuesCount; ++i)
+                ReadGameRuleValuePair(packet, "GameRuleValues");
         }
 
         [Parser(Opcode.SMSG_SET_ALL_TASK_PROGRESS)]

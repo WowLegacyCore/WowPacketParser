@@ -1,29 +1,47 @@
+using System.Collections.Generic;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Parsing;
+using WowPacketParser.Store.Objects;
 
 namespace WowPacketParserModule.V7_0_3_22248.Parsers
 {
     public static class AreaTriggerHandler
     {
-        public static void ReadAreaTriggerSpline(Packet packet, params object[] indexes)
+        public static List<AreaTriggerCreatePropertiesSplinePoint> ReadAreaTriggerSpline(AreaTriggerCreateProperties areaTrigger, Packet packet, params object[] indexes)
         {
             packet.ReadInt32("TimeToTarget", indexes);
             packet.ReadInt32("ElapsedTimeForMovement", indexes);
 
             packet.ResetBitReader();
 
-            var verticesCount = packet.ReadBits("VerticesCount", 16, indexes);
+            var pointCount = (int) packet.ReadBits("PointsCount", 16, indexes);
+            var points = new List<AreaTriggerCreatePropertiesSplinePoint>(pointCount);
 
-            for (var i = 0; i < verticesCount; ++i)
-                packet.ReadVector3("Points", indexes, i);
+            for (var i = 0u; i < pointCount; ++i)
+            {
+                var point = packet.ReadVector3("Points", indexes, i);
+                if (areaTrigger != null)
+                {
+                    points.Add(new AreaTriggerCreatePropertiesSplinePoint()
+                    {
+                        areatriggerGuid = areaTrigger.Guid,
+                        Idx = i,
+                        X = point.X,
+                        Y = point.Y,
+                        Z = point.Z
+                    });
+                }
+            }
+
+            return points;
         }
 
         [Parser(Opcode.SMSG_AREA_TRIGGER_RE_PATH)]
         public static void HandleAreaTriggerRePath(Packet packet)
         {
             packet.ReadPackedGuid128("TriggerGUID");
-            ReadAreaTriggerSpline(packet);
+            ReadAreaTriggerSpline(null, packet);
         }
 
         [Parser(Opcode.SMSG_AREA_TRIGGER_RE_SHAPE)]
@@ -33,33 +51,41 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
 
             packet.ResetBitReader();
             var hasAreaTriggerSpline = packet.ReadBit("HasAreaTriggerSpline");
-            var hasAreaTriggerCircularMovement = packet.ReadBit("HasAreaTriggerCircularMovement");
+            var hasAreaTriggerOrbit = packet.ReadBit("HasAreaTriggerOrbit");
 
             if (hasAreaTriggerSpline)
-                ReadAreaTriggerSpline(packet);
+                ReadAreaTriggerSpline(null, packet, "Spline");
 
-            if (hasAreaTriggerCircularMovement)
-            {
-                packet.ResetBitReader();
-                var hasTarget = packet.ReadBit("HasTarget");
-                var hasCenter = packet.ReadBit("HasCenter");
-                packet.ReadBit("CounterClockwise");
-                packet.ReadBit("CanLoop");
+            if (hasAreaTriggerOrbit)
+                ReadAreaTriggerOrbit(null, packet, "Orbit");
+        }
 
-                packet.ReadUInt32("TimeToTarget");
-                packet.ReadInt32("ElapsedTimeForMovement");
-                packet.ReadUInt32("StartDelay");
-                packet.ReadSingle("Radius");
-                packet.ReadSingle("BlendFromRadius");
-                packet.ReadSingle("InitialAngel");
-                packet.ReadSingle("ZOffset");
+        public static AreaTriggerCreatePropertiesOrbit ReadAreaTriggerOrbit(WowGuid areaTriggerGuid, Packet packet, params object[] indexes)
+        {
+            packet.ResetBitReader();
+            var orbit = new AreaTriggerCreatePropertiesOrbit();
+            orbit.areatriggerGuid = areaTriggerGuid;
 
-                if (hasTarget)
-                    packet.ReadPackedGuid128("TargetGUID");
+            var hasTarget = packet.ReadBit("HasPathTarget", indexes);
+            var hasCenter = packet.ReadBit("HasCenter", indexes);
+            orbit.CounterClockwise = packet.ReadBit("CounterClockwise", indexes);
+            orbit.CanLoop = packet.ReadBit("CanLoop", indexes);
 
-                if (hasCenter)
-                    packet.ReadVector3("Center");
-            }
+            packet.ReadUInt32("TimeToTarget", indexes);
+            packet.ReadInt32("ElapsedTimeForMovement", indexes);
+            orbit.StartDelay = packet.ReadUInt32("StartDelay", indexes);
+            orbit.CircleRadius = packet.ReadSingle("Radius", indexes);
+            orbit.BlendFromRadius = packet.ReadSingle("BlendFromRadius", indexes);
+            orbit.InitialAngle = packet.ReadSingle("InitialAngel", indexes);
+            orbit.ZOffset = packet.ReadSingle("ZOffset", indexes);
+
+            if (hasTarget)
+                packet.ReadPackedGuid128("PathTarget", indexes);
+
+            if (hasCenter)
+                packet.ReadVector3("Center", indexes);
+
+            return orbit;
         }
     }
 }

@@ -8,7 +8,7 @@ using WowPacketParser.Store.Objects.UpdateFields.LegacyImplementation;
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("conversation_template")]
-    public sealed class ConversationTemplate : WoWObject, IDataModel
+    public sealed record ConversationTemplate : WoWObject, IDataModel
     {
         [DBFieldName("Id", true)]
         public uint? Id;
@@ -16,7 +16,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("FirstLineID")]
         public uint? FirstLineID;
 
-        [DBFieldName("LastLineEndTime")]
+        [DBFieldName("LastLineEndTime", TargetedDatabase.Zero, TargetedDatabase.Shadowlands)]
         public uint? LastLineEndTime;
 
         [DBFieldName("TextureKitId", TargetedDatabase.BattleForAzeroth)]

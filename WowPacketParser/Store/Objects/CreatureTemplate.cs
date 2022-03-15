@@ -5,7 +5,7 @@ using WowPacketParser.SQL;
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("creature_template")]
-    public sealed class CreatureTemplate : IDataModel
+    public sealed record CreatureTemplate : IDataModel
     {
         [DBFieldName("entry", true)]
         public uint? Entry;
@@ -82,12 +82,15 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("movementId")]
         public uint? MovementID;
 
+        [DBFieldName("CreatureDifficultyID", TargetedDatabase.Shadowlands)]
+        public int? CreatureDifficultyID;
+
         [DBFieldName("VerifiedBuild")]
         public int? VerifiedBuild = ClientVersion.BuildInt;
     }
 
     [DBTableName("creature_template")]
-    public sealed class CreatureTemplateNonWDB : IDataModel
+    public sealed record CreatureTemplateNonWDB : IDataModel
     {
         [DBFieldName("entry", true)]
         public uint? Entry;
@@ -146,7 +149,7 @@ namespace WowPacketParser.Store.Objects
     }
 
     [DBTableName("creature_questitem")]
-    public sealed class CreatureTemplateQuestItem : IDataModel
+    public sealed record CreatureTemplateQuestItem : IDataModel
     {
         [DBFieldName("CreatureEntry", true)]
         public uint? CreatureEntry;
@@ -162,7 +165,7 @@ namespace WowPacketParser.Store.Objects
     }
 
     [DBTableName("creature_template")]
-    public sealed class CreatureTemplateClassic : IDataModel
+    public sealed record CreatureTemplateClassic : IDataModel
     {
         [DBFieldName("entry", true)]
         public uint? Entry;

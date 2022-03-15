@@ -2,8 +2,10 @@
 using WowPacketParser.Misc;
 using WowPacketParser.PacketStructures;
 using WowPacketParser.Parsing;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using CoreParsers = WowPacketParser.Parsing.Parsers;
+using MovementFlag = WowPacketParser.Enums.v4.MovementFlag;
+using MovementFlag2 = WowPacketParser.Enums.v4.MovementFlag2;
 
 namespace WowPacketParserModule.V5_3_0_16981.Parsers
 {
@@ -79,7 +81,7 @@ namespace WowPacketParserModule.V5_3_0_16981.Parsers
                 hasFallDirection = packet.ReadBit();
 
             if (hasExtraMovementFlags)
-                packet.ReadBitsE<MovementFlagExtra>("Extra Movement Flags", 13);
+                packet.ReadBitsE<MovementFlag2>("Extra Movement Flags", 13);
 
             packet.ResetBitReader();
 
@@ -278,7 +280,7 @@ namespace WowPacketParserModule.V5_3_0_16981.Parsers
                 // client always taking first point
                 if (i == 0)
                     endpos = spot;
-                
+
                 monsterMove.Points.Add(spot);
             }
 
@@ -335,7 +337,7 @@ namespace WowPacketParserModule.V5_3_0_16981.Parsers
             guid[5] = packet.ReadBit();
 
             if (hasExtraMovementFlags)
-                packet.ReadBitsE<MovementFlagExtra>("Extra Movement Flags", 13);
+                packet.ReadBitsE<MovementFlag2>("Extra Movement Flags", 13);
 
             var hasMovementFlags = !packet.ReadBit();
             packet.ReadBit("unk_bit");

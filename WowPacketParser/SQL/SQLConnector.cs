@@ -1,8 +1,8 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using MySql.Data.MySqlClient;
 using WowPacketParser.Misc;
 
 namespace WowPacketParser.SQL
@@ -107,8 +107,10 @@ namespace WowPacketParser.SQL
             try
             {
                 Connect();
-                SQLDatabase.GrabNameData();
+                // Load names from world db first
                 SQLDatabase.LoadSQL();
+                // then fill gaps with object_names table
+                SQLDatabase.GrabNameData();
             }
             catch (Exception ex)
             {

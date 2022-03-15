@@ -1,10 +1,9 @@
-#nullable enable
 using System.Collections.Generic;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.PacketStructures;
 using WowPacketParser.Parsing;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
 using SpellCastFailureReason = WowPacketParser.Enums.Version.V6_1_0_19678.SpellCastFailureReason;
@@ -36,7 +35,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
                 packet.ReadSingle("Float7", idx);
         }
 
-        public static void ReadSpellTargetData(Packet packet, PacketSpellData? spellData, params object[] idx)
+        public static void ReadSpellTargetData(Packet packet, PacketSpellData spellData, params object[] idx)
         {
             packet.ResetBitReader();
 
@@ -93,7 +92,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
             packet.ReadByteE<PowerType>("Type", idx);
         }
 
-        public static void ReadSpellCastRequest(Packet packet, params object[] idx)
+        public static uint ReadSpellCastRequest(Packet packet, params object[] idx)
         {
             packet.ReadByte("CastID", idx);
 
@@ -103,7 +102,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
                     packet.ReadInt32("Misc", idx, i);
             }
 
-            packet.ReadInt32<SpellId>("SpellID", idx);
+            uint spellId = packet.ReadUInt32<SpellId>("SpellID", idx);
             packet.ReadInt32(ClientVersion.AddedInVersion(ClientVersionBuild.V6_2_0_20173) ? "SpellXSpellVisualID" : "Misc", idx);
 
             ReadSpellTargetData(packet, null, idx, "Target");
@@ -124,6 +123,8 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
 
             for (var i = 0; i < weightCount; ++i)
                 ReadSpellWeight(packet, idx, "Weight", i);
+
+            return spellId;
         }
 
         [Parser(Opcode.SMSG_LEARNED_SPELLS)]
@@ -241,7 +242,7 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
 
                     if (hasMaxDuration)
                         auraEntry.Remaining = aura.MaxDuration;
-                    
+
                     auras.Add(aura);
                     packet.AddSniffData(StoreNameType.Spell, (int)aura.SpellId, "AURA_UPDATE");
                 }
@@ -1129,6 +1130,25 @@ namespace WowPacketParserModule.V6_0_2_19033.Parsers
         public static void HandleCancelModSpeedNoControlAuras(Packet packet)
         {
             packet.ReadPackedGuid128("TargetGUID");
+        }
+
+        [Parser(Opcode.CMSG_UPDATE_MISSILE_TRAJECTORY)]
+        public static void HandleUpdateMissileTrajectory(Packet packet)
+        {
+            packet.ReadPackedGuid128("Guid");
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_5_40772))
+                packet.ReadPackedGuid128("CastID");
+            packet.ReadUInt16("MoveMsgID");
+            packet.ReadInt32("SpellID");
+            packet.ReadSingle("Pitch");
+            packet.ReadSingle("Speed");
+            packet.ReadVector3("FirePos");
+            packet.ReadVector3("ImpactPos");
+
+            packet.ResetBitReader();
+            var hasStatus = packet.ReadBit("HasStatus");
+            if (hasStatus)
+                MovementHandler.ReadMovementStats(packet, "Status");
         }
     }
 }

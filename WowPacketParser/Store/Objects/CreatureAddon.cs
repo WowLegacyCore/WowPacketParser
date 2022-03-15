@@ -3,7 +3,8 @@ using WowPacketParser.SQL;
 
 namespace WowPacketParser.Store.Objects
 {
-    public sealed class CreatureAddon : IDataModel
+    [DBTableName("creature_addon")]
+    public sealed record CreatureAddon : IDataModel
     {
         [DBFieldName("guid", true, noQuotes: true)]
         public string GUID;
@@ -31,6 +32,11 @@ namespace WowPacketParser.Store.Objects
 
         [DBFieldName("meleeAnimKit", TargetedDatabase.Legion)]
         public ushort? MeleeAnimKit;
+
+        // visibilityDistanceType exists in all database versions but because UnitFlags2 to detect the value from sniff doesn't exist in earlier client version
+        // we pretend the field doesn't exist
+        [DBFieldName("visibilityDistanceType", TargetedDatabase.WarlordsOfDraenor)]
+        public byte? VisibilityDistanceType;
 
         [DBFieldName("auras")]
         public string Auras;

@@ -53,27 +53,28 @@ namespace WowPacketParser.Misc
             return ConvDict801[type];
         }
 
-        private static readonly Dictionary<ObjectType251, ObjectType> ConvDict251 = new()
+
+        private static readonly Dictionary<ObjectTypeBCC, ObjectType> ConvDictBCC = new Dictionary<ObjectTypeBCC, ObjectType>
         {
-            { ObjectType251.Object,                 ObjectType.Object },
-            { ObjectType251.Item,                   ObjectType.Item },
-            { ObjectType251.Container,              ObjectType.Container },
-            { ObjectType251.Unit,                   ObjectType.Unit },
-            { ObjectType251.Player,                 ObjectType.Player },
-            { ObjectType251.ActivePlayer,           ObjectType.ActivePlayer },
-            { ObjectType251.GameObject,             ObjectType.GameObject },
-            { ObjectType251.DynamicObject,          ObjectType.DynamicObject },
-            { ObjectType251.Corpse,                 ObjectType.Corpse },
-            { ObjectType251.AreaTrigger,            ObjectType.AreaTrigger },
-            { ObjectType251.SceneObject,            ObjectType.SceneObject },
-            { ObjectType251.Conversation,           ObjectType.Conversation }
+            { ObjectTypeBCC.Object,                 ObjectType.Object },
+            { ObjectTypeBCC.Item,                   ObjectType.Item },
+            { ObjectTypeBCC.Container,              ObjectType.Container },
+            { ObjectTypeBCC.Unit,                   ObjectType.Unit },
+            { ObjectTypeBCC.Player,                 ObjectType.Player },
+            { ObjectTypeBCC.ActivePlayer,           ObjectType.ActivePlayer },
+            { ObjectTypeBCC.GameObject,             ObjectType.GameObject },
+            { ObjectTypeBCC.DynamicObject,          ObjectType.DynamicObject },
+            { ObjectTypeBCC.Corpse,                 ObjectType.Corpse },
+            { ObjectTypeBCC.AreaTrigger,            ObjectType.AreaTrigger },
+            { ObjectTypeBCC.SceneObject,            ObjectType.SceneObject },
+            { ObjectTypeBCC.Conversation,           ObjectType.Conversation }
         };
 
-        public static ObjectType Convert(ObjectType251 type)
+        public static ObjectType Convert(ObjectTypeBCC type)
         {
-            if (!ConvDict251.ContainsKey(type))
+            if (!ConvDictBCC.ContainsKey(type))
                 throw new ArgumentOutOfRangeException("0x" + type.ToString("X"));
-            return ConvDict251[type];
+            return ConvDictBCC[type];
         }
     }
 }

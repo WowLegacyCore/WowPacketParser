@@ -5,7 +5,7 @@ using WowPacketParser.SQL;
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("creature_template_scaling")]
-    public sealed class CreatureTemplateScaling : IDataModel
+    public sealed record CreatureTemplateScaling : IDataModel
     {
         [DBFieldName("Entry", true)]
         public uint? Entry;
@@ -13,10 +13,10 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("DifficultyID", true)]
         public uint? DifficultyID;
 
-        [DBFieldName("LevelScalingMin")]
+        [DBFieldName("LevelScalingMin", TargetedDatabase.Legion, TargetedDatabase.Shadowlands)]
         public uint? LevelScalingMin;
 
-        [DBFieldName("LevelScalingMax")]
+        [DBFieldName("LevelScalingMax", TargetedDatabase.Legion, TargetedDatabase.Shadowlands)]
         public uint? LevelScalingMax;
 
         [DBFieldName("LevelScalingDeltaMin")]

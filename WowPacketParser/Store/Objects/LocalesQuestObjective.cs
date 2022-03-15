@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using WowPacketParser.Enums;
-using WowPacketParser.Misc;
+﻿using WowPacketParser.Misc;
 using WowPacketParser.SQL;
 
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("locales_quest_objectives")]
-    public sealed class LocalesQuestObjectives
+    public sealed record LocalesQuestObjectives
     {
         [DBFieldName("QuestId")]
         public uint QuestId;

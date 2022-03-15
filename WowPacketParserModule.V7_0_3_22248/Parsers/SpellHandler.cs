@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using WowPacketParser.DBC;
@@ -6,7 +5,7 @@ using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.PacketStructures;
 using WowPacketParser.Parsing;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
 
@@ -14,7 +13,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
 {
     public static class SpellHandler
     {
-        public static void ReadSpellCastRequest(Packet packet, params object[] idx)
+        public static uint ReadSpellCastRequest(Packet packet, params object[] idx)
         {
             packet.ReadPackedGuid128("CastID", idx);
 
@@ -42,6 +41,8 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
 
             for (var i = 0; i < weightCount; ++i)
                 V6_0_2_19033.Parsers.SpellHandler.ReadSpellWeight(packet, idx, "Weight", i);
+
+            return spellId;
         }
 
         public static PacketSpellData ReadSpellCastData(Packet packet, params object[] idx)
@@ -104,7 +105,7 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             return packetSpellData;
         }
 
-        public static void ReadSpellTargetData(Packet packet, PacketSpellData? packetSpellData, uint spellID, params object[] idx)
+        public static void ReadSpellTargetData(Packet packet, PacketSpellData packetSpellData, uint spellID, params object[] idx)
         {
             packet.ResetBitReader();
 

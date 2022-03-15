@@ -1,11 +1,10 @@
-﻿using WowPacketParser.Loading;
-using WowPacketParser.Misc;
+﻿using WowPacketParser.Misc;
 using WowPacketParser.SQL;
 
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("creature_template_locale")]
-    public sealed class CreatureTemplateLocale : IDataModel
+    public sealed record CreatureTemplateLocale : IDataModel
     {
         [DBFieldName("entry", true)]
         public uint? ID;

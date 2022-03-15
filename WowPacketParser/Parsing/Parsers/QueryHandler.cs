@@ -1,9 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using WowPacketParser.Enums;
-using WowPacketParser.Enums.Version;
-using WowPacketParser.Loading;
 using WowPacketParser.Misc;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
 
@@ -28,7 +26,9 @@ namespace WowPacketParser.Parsing.Parsers
         [Parser(Opcode.SMSG_QUERY_PLAYER_NAME_RESPONSE)]
         public static void HandleNameQueryResponse(Packet packet)
         {
-            PacketQueryPlayerNameResponse response = packet.Holder.QueryPlayerNameResponse = new();
+            PacketQueryPlayerNameResponseWrapper responses = packet.Holder.QueryPlayerNameResponse = new();
+            PacketQueryPlayerNameResponse response = new();
+            responses.Responses.Add(response);
             WowGuid guid;
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V3_1_0_9767))
             {
@@ -140,7 +140,7 @@ namespace WowPacketParser.Parsing.Parsers
             creature.Type = packet.ReadInt32E<CreatureType>("Type");
             creature.Family = packet.ReadInt32E<CreatureFamily>("Family");
             creature.Rank = packet.ReadInt32E<CreatureRank>("Rank");
-            
+
             response.Type = (int?)creature.Type ?? 0;
             response.Family = (int?)creature.Family ?? 0;
             response.Rank = (int?)creature.Rank ?? 0;
@@ -181,7 +181,7 @@ namespace WowPacketParser.Parsing.Parsers
             {
                 for (int i = 0; i < qItemCount; i++)
                     response.QuestItems.Add((uint)packet.ReadInt32<ItemId>("Quest Item", i));
-                
+
                 creature.MovementID = response.MovementId = packet.ReadUInt32("Movement ID");
             }
 

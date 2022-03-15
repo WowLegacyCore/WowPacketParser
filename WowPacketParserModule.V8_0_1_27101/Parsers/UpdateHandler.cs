@@ -1,15 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
+using WowPacketParser.PacketStructures;
 using WowPacketParser.Parsing;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
+using WowPacketParser.Store.Objects.UpdateFields;
 using WowPacketParserModule.V7_0_3_22248.Enums;
 using WowPacketParserModule.V7_0_3_22248.Parsers;
-using CoreParsers = WowPacketParser.Parsing.Parsers;
-using SplineFlag = WowPacketParserModule.V7_0_3_22248.Enums.SplineFlag;
 using CoreFields = WowPacketParser.Enums.Version;
+using CoreParsers = WowPacketParser.Parsing.Parsers;
+using MovementFlag = WowPacketParser.Enums.v4.MovementFlag;
+using MovementFlag2 = WowPacketParser.Enums.v7.MovementFlag2;
+using SplineFlag = WowPacketParserModule.V7_0_3_22248.Enums.SplineFlag;
 
 namespace WowPacketParserModule.V8_0_1_27101.Parsers
 {
@@ -48,20 +53,21 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
 
             for (var i = 0; i < count; i++)
             {
-                var type = packet.ReadByte();
-                var typeString = ((UpdateTypeCataclysm)type).ToString();
+                var type = (UpdateTypeCataclysm)packet.ReadByte();
 
                 var partWriter = new StringBuilderProtoPart(packet.Writer);
-                packet.AddValue("UpdateType", typeString, i);
-                switch (typeString)
+                packet.AddValue("UpdateType", type.ToString(), i);
+                switch (type)
                 {
-                    case "Values":
+                    case UpdateTypeCataclysm.Values:
                     {
                         var guid = packet.ReadPackedGuid128("Object Guid", i);
+                        var updateValues = new UpdateValues();
                         if (ClientVersion.AddedInVersion(ClientVersionBuild.V8_1_0_28724))
                         {
                             var updatefieldSize = packet.ReadUInt32();
                             var handler = CoreFields.UpdateFields.GetHandler();
+                            updateValues.Fields = new();
                             using (var fieldsData = new Packet(packet.ReadBytes((int)updatefieldSize), packet.Opcode, packet.Time, packet.Direction, packet.Number, packet.Writer, packet.FileName))
                             {
                                 WoWObject obj;
@@ -70,66 +76,80 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                                 var updateTypeFlag = fieldsData.ReadUInt32();
                                 if ((updateTypeFlag & 0x0001) != 0)
                                 {
-                                    var data = handler.ReadUpdateObjectData(fieldsData, obj?.ObjectData, i);
-                                    if (obj != null)
+                                    var data = handler.ReadUpdateObjectData(fieldsData, i);
+                                    if (obj is { ObjectData: IMutableObjectData mut })
+                                        mut.UpdateData(data);
+                                    else if (obj != null)
                                         obj.ObjectData = data;
+
+                                    updateValues.Fields.UpdateData(data);
                                 }
                                 if ((updateTypeFlag & 0x0002) != 0)
-                                    handler.ReadUpdateItemData(fieldsData, null, i);
+                                    handler.ReadUpdateItemData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0004) != 0)
-                                    handler.ReadUpdateContainerData(fieldsData, null, i);
+                                    handler.ReadUpdateContainerData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0008) != 0)
-                                    handler.ReadUpdateAzeriteEmpoweredItemData(fieldsData, null, i);
+                                    handler.ReadUpdateAzeriteEmpoweredItemData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0010) != 0)
-                                    handler.ReadUpdateAzeriteItemData(fieldsData, null, i);
+                                    handler.ReadUpdateAzeriteItemData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0020) != 0)
                                 {
                                     var unit = obj as Unit;
-                                    var data = handler.ReadUpdateUnitData(fieldsData, unit?.UnitData, i);
-                                    if (unit != null)
+                                    var data = handler.ReadUpdateUnitData(fieldsData, i);
+                                    if (unit is { UnitData: IMutableUnitData mut })
+                                        mut.UpdateData(data);
+                                    else if (unit != null)
                                         unit.UnitData = data;
+
+                                    updateValues.Fields.UpdateData(data);
                                 }
                                 if ((updateTypeFlag & 0x0040) != 0)
-                                    handler.ReadUpdatePlayerData(fieldsData, null, i);
+                                    handler.ReadUpdatePlayerData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0080) != 0)
-                                    handler.ReadUpdateActivePlayerData(fieldsData, null, i);
+                                    handler.ReadUpdateActivePlayerData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0100) != 0)
                                 {
                                     var go = obj as GameObject;
-                                    var data = handler.ReadUpdateGameObjectData(fieldsData, go?.GameObjectData, i);
-                                    if (go != null)
+                                    var data = handler.ReadUpdateGameObjectData(fieldsData, i);
+                                    if (go is { GameObjectData: IMutableGameObjectData mut })
+                                        mut.UpdateData(data);
+                                    else if (go != null)
                                         go.GameObjectData = data;
+
+                                    updateValues.Fields.UpdateData(data);
                                 }
                                 if ((updateTypeFlag & 0x0200) != 0)
-                                    handler.ReadUpdateDynamicObjectData(fieldsData, null, i);
+                                    handler.ReadUpdateDynamicObjectData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0400) != 0)
-                                    handler.ReadUpdateCorpseData(fieldsData, null, i);
+                                    handler.ReadUpdateCorpseData(fieldsData, i);
                                 if ((updateTypeFlag & 0x0800) != 0)
-                                    handler.ReadUpdateAreaTriggerData(fieldsData, null, i);
+                                    handler.ReadUpdateAreaTriggerData(fieldsData, i);
                                 if ((updateTypeFlag & 0x1000) != 0)
-                                    handler.ReadUpdateSceneObjectData(fieldsData, null, i);
+                                    handler.ReadUpdateSceneObjectData(fieldsData, i);
                                 if ((updateTypeFlag & 0x2000) != 0)
                                 {
                                     var conversation = obj as ConversationTemplate;
-                                    var data = handler.ReadUpdateConversationData(fieldsData, conversation?.ConversationData, i);
-                                    if (conversation != null)
+                                    var data = handler.ReadUpdateConversationData(fieldsData, i);
+                                    if (conversation is { ConversationData: IMutableConversationData mut })
+                                        mut.UpdateData(data);
+                                    else if (conversation != null)
                                         conversation.ConversationData = data;
                                 }
                             }
                         }
                         else
                         {
-                            var updateValues = new UpdateValues();
-                            CoreParsers.UpdateHandler.ReadValuesUpdateBlock(packet, updateValues, guid, i);
-                            updateObject.Updated.Add(new UpdateObject{Guid = guid, Values = updateValues, Text = partWriter.Text});
+                            updateValues.Legacy = new();
+                            CoreParsers.UpdateHandler.ReadValuesUpdateBlock(packet, updateValues.Legacy, guid, i);
                         }
+                        updateObject.Updated.Add(new UpdateObject{Guid = guid, Values = updateValues, Text = partWriter.Text});
                         break;
                     }
-                    case "CreateObject1":
-                    case "CreateObject2":
+                    case UpdateTypeCataclysm.CreateObject1:
+                    case UpdateTypeCataclysm.CreateObject2:
                     {
                         var guid = packet.ReadPackedGuid128("Object Guid", i);
-                        var createObject = new CreateObject() { Guid = guid, Values = new()};
+                        var createObject = new CreateObject() { Guid = guid, Values = new(){}, CreateType = type.ToCreateObjectType() };
                         ReadCreateObjectBlock(packet, createObject, guid, map, i);
                         createObject.Text = partWriter.Text;
                         updateObject.Created.Add(createObject);
@@ -144,38 +164,21 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             ObjectType objType = ObjectTypeConverter.Convert(packet.ReadByteE<ObjectType801>("Object Type", index));
             if (ClientVersion.RemovedInVersion(ClientVersionBuild.V8_1_0_28724))
                 packet.ReadInt32("HeirFlags", index);
-            WoWObject obj;
-            switch (objType)
-            {
-                case ObjectType.Unit:
-                    obj = new Unit();
-                    break;
-                case ObjectType.GameObject:
-                    obj = new GameObject();
-                    break;
-                case ObjectType.Player:
-                    obj = new Player();
-                    break;
-                case ObjectType.AreaTrigger:
-                    obj = new SpellAreaTrigger();
-                    break;
-                case ObjectType.Conversation:
-                    obj = new ConversationTemplate();
-                    break;
-                default:
-                    obj = new WoWObject();
-                    break;
-            }
 
-            var moves = ReadMovementUpdateBlock(packet, createObject, guid, obj, index);
+            WoWObject obj = CoreParsers.UpdateHandler.CreateObject(objType, guid, map);
+
+            obj.Movement = ReadMovementUpdateBlock(packet, createObject, guid, obj, index);
+
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V8_1_0_28724))
             {
+                createObject.Values.Fields = new();
                 var updatefieldSize = packet.ReadUInt32();
                 using (var fieldsData = new Packet(packet.ReadBytes((int)updatefieldSize), packet.Opcode, packet.Time, packet.Direction, packet.Number, packet.Writer, packet.FileName))
                 {
                     var flags = fieldsData.ReadByteE<UpdateFieldFlag>("FieldFlags", index);
                     var handler = CoreFields.UpdateFields.GetHandler();
                     obj.ObjectData = handler.ReadCreateObjectData(fieldsData, flags, index);
+                    createObject.Values.Fields.UpdateData(obj.ObjectData);
                     switch (objType)
                     {
                         case ObjectType.Item:
@@ -194,8 +197,11 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                             handler.ReadCreateAzeriteItemData(fieldsData, flags, index);
                             break;
                         case ObjectType.Unit:
-                            (obj as Unit).UnitData = handler.ReadCreateUnitData(fieldsData, flags, index);
+                        {
+                            var data = (obj as Unit).UnitData = handler.ReadCreateUnitData(fieldsData, flags, index);
+                            createObject.Values.Fields.UpdateData(data);
                             break;
+                        }
                         case ObjectType.Player:
                             handler.ReadCreateUnitData(fieldsData, flags, index);
                             handler.ReadCreatePlayerData(fieldsData, flags, index);
@@ -206,8 +212,11 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                             handler.ReadCreateActivePlayerData(fieldsData, flags, index);
                             break;
                         case ObjectType.GameObject:
-                            (obj as GameObject).GameObjectData = handler.ReadCreateGameObjectData(fieldsData, flags, index);
+                        {
+                            var data = (obj as GameObject).GameObjectData = handler.ReadCreateGameObjectData(fieldsData, flags, index);
+                            createObject.Values.Fields.UpdateData(data);
                             break;
+                        }
                         case ObjectType.DynamicObject:
                             handler.ReadCreateDynamicObjectData(fieldsData, flags, index);
                             break;
@@ -215,10 +224,10 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                             handler.ReadCreateCorpseData(fieldsData, flags, index);
                             break;
                         case ObjectType.AreaTrigger:
-                            (obj as SpellAreaTrigger).AreaTriggerData = handler.ReadCreateAreaTriggerData(fieldsData, flags, index);
+                            (obj as AreaTriggerCreateProperties).AreaTriggerData = handler.ReadCreateAreaTriggerData(fieldsData, flags, index);
                             break;
                         case ObjectType.SceneObject:
-                            handler.ReadCreateSceneObjectData(fieldsData, flags, index);
+                            (obj as SceneObject).SceneObjectData = handler.ReadCreateSceneObjectData(fieldsData, flags, index);
                             break;
                         case ObjectType.Conversation:
                             (obj as ConversationTemplate).ConversationData = handler.ReadCreateConversationData(fieldsData, flags, index);
@@ -228,21 +237,10 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             }
             else
             {
-                var updates = CoreParsers.UpdateHandler.ReadValuesUpdateBlockOnCreate(packet, createObject.Values, objType, index);
-                var dynamicUpdates = CoreParsers.UpdateHandler.ReadDynamicValuesUpdateBlockOnCreate(packet, objType, index);
-
-                obj.UpdateFields = updates;
-                obj.DynamicUpdateFields = dynamicUpdates;
+                createObject.Values.Legacy = new();
+                obj.UpdateFields = CoreParsers.UpdateHandler.ReadValuesUpdateBlockOnCreate(packet, createObject.Values.Legacy, objType, index);
+                obj.DynamicUpdateFields = CoreParsers.UpdateHandler.ReadDynamicValuesUpdateBlockOnCreate(packet, objType, index);
             }
-
-            obj.Type = objType;
-            obj.Movement = moves;
-            obj.Map = map;
-            obj.Area = CoreParsers.WorldStateHandler.CurrentAreaId;
-            obj.Zone = CoreParsers.WorldStateHandler.CurrentZoneId;
-            obj.PhaseMask = (uint)CoreParsers.MovementHandler.CurrentPhaseMask;
-            obj.Phases = new HashSet<ushort>(CoreParsers.MovementHandler.ActivePhases.Keys);
-            obj.DifficultyID = CoreParsers.MovementHandler.CurrentDifficultyID;
 
             // If this is the second time we see the same object (same guid,
             // same position) update its phasemask
@@ -260,10 +258,11 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
 
         public static MovementUpdateTransport ReadTransportData(MovementInfo moveInfo, WowGuid guid, Packet packet, object index)
         {
+            moveInfo.Transport = new MovementInfo.TransportInfo();
             MovementUpdateTransport transport = new();
             packet.ResetBitReader();
-            transport.TransportGuid = moveInfo.TransportGuid = packet.ReadPackedGuid128("TransportGUID", index);
-            transport.Position = moveInfo.TransportOffset = packet.ReadVector4("TransportPosition", index);
+            transport.TransportGuid = moveInfo.Transport.Guid = packet.ReadPackedGuid128("TransportGUID", index);
+            transport.Position = moveInfo.Transport.Offset = packet.ReadVector4("TransportPosition", index);
             var seat = packet.ReadByte("VehicleSeatIndex", index);
             transport.Seat = seat;
             transport.MoveTime = packet.ReadUInt32("MoveTime", index);
@@ -277,12 +276,12 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             if (hasVehicleRecID)
                 transport.VehicleId = packet.ReadInt32("VehicleRecID", index);
 
-            if (moveInfo.TransportGuid.HasEntry() && moveInfo.TransportGuid.GetHighType() == HighGuidType.Vehicle &&
+            if (moveInfo.Transport.Guid.HasEntry() && moveInfo.Transport.Guid.GetHighType() == HighGuidType.Vehicle &&
                 guid.HasEntry() && guid.GetHighType() == HighGuidType.Creature)
             {
                 VehicleTemplateAccessory vehicleAccessory = new VehicleTemplateAccessory
                 {
-                    Entry = moveInfo.TransportGuid.GetEntry(),
+                    Entry = moveInfo.Transport.Guid.GetEntry(),
                     AccessoryEntry = guid.GetEntry(),
                     SeatId = seat
                 };
@@ -326,6 +325,13 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 packet.ResetBitReader();
                 movementUpdate.Mover = packet.ReadPackedGuid128("MoverGUID", index);
 
+                if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                {
+                    moveInfo.Flags = (uint)packet.ReadUInt32E<MovementFlag>("MovementFlags", index);
+                    moveInfo.Flags2 = (uint)packet.ReadUInt32E<MovementFlag2>("MovementFlags2", index);
+                    moveInfo.Flags3 = (uint)packet.ReadUInt32E<MovementFlag3>("MovementFlags3", index);
+                }
+
                 movementUpdate.MoveTime = packet.ReadUInt32("MoveTime", index);
                 movementUpdate.Position = moveInfo.Position = packet.ReadVector3("Position", index);
                 movementUpdate.Orientation = moveInfo.Orientation = packet.ReadSingle("Orientation", index);
@@ -339,17 +345,28 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 for (var i = 0; i < removeForcesIDsCount; i++)
                     packet.ReadPackedGuid128("RemoveForcesIDs", index, i);
 
-                moveInfo.Flags = (MovementFlag)packet.ReadBitsE<V6_0_2_19033.Enums.MovementFlag>("Movement Flags", 30, index);
-                moveInfo.FlagsExtra = (MovementFlagExtra)packet.ReadBitsE<Enums.MovementFlags2>("Extra Movement Flags", 18, index);
+                if (ClientVersion.RemovedInVersion(ClientVersionBuild.V9_2_0_42423))
+                {
+                    moveInfo.Flags = (uint)packet.ReadBitsE<MovementFlag>("Movement Flags", 30, index);
+                    moveInfo.Flags2 = (uint)packet.ReadBitsE<MovementFlag2>("Extra Movement Flags", 18, index);
+                }
 
                 var hasTransport = packet.ReadBit("Has Transport Data", index);
                 var hasFall = packet.ReadBit("Has Fall Data", index);
                 packet.ReadBit("HasSpline", index);
                 packet.ReadBit("HeightChangeFailed", index);
                 packet.ReadBit("RemoteTimeValid", index);
+                var hasInertia = ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423) && packet.ReadBit("HasInertia", index);
 
                 if (hasTransport)
                     movementUpdate.Transport = ReadTransportData(moveInfo, guid, packet, index);
+
+                if (hasInertia)
+                {
+                    packet.ReadPackedGuid128("GUID", index, "Inertia");
+                    packet.ReadVector3("Force", index, "Inertia");
+                    packet.ReadUInt32("Lifetime", index, "Inertia");
+                }
 
                 if (hasFall)
                 {
@@ -393,6 +410,13 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                     packet.ReadUInt32("TransportID", index);
                     packet.ReadSingle("Magnitude", index);
                     packet.ReadBits("Type", 2, index);
+
+                    if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_0_39185))
+                    {
+                        var unused910 = packet.ReadBit();
+                        if (unused910)
+                            packet.ReadInt32("Unused910", index);
+                    }
                 }
 
                 if (moveInfo.HasSplineData)
@@ -548,14 +572,14 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             if (hasMovementTransport)
                 createObject.Transport = ReadTransportData(moveInfo, guid, packet, index);
 
-            if (hasAreaTrigger && obj is SpellAreaTrigger)
+            if (hasAreaTrigger && obj is AreaTriggerCreateProperties)
             {
                 AreaTriggerTemplate areaTriggerTemplate = new AreaTriggerTemplate
                 {
                     Id = guid.GetEntry()
                 };
 
-                SpellAreaTrigger spellAreaTrigger = (SpellAreaTrigger)obj;
+                AreaTriggerCreateProperties spellAreaTrigger = (AreaTriggerCreateProperties)obj;
                 spellAreaTrigger.AreaTriggerId = guid.GetEntry();
 
                 packet.ResetBitReader();
@@ -592,17 +616,21 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 bool hasMorphCurveID = packet.ReadBit("HasMorphCurveID", index);
                 bool hasFacingCurveID = packet.ReadBit("HasFacingCurveID", index);
                 bool hasMoveCurveID = packet.ReadBit("HasMoveCurveID", index);
+                bool hasAnimProgress = false;
 
-                if (packet.ReadBit("HasAnimID", index))
-                    areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.HasAnimId;
+                if (ClientVersion.RemovedInVersion(ClientVersionBuild.V9_1_5_40772))
+                {
+                    if (packet.ReadBit("HasAnimID", index))
+                        areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.HasAnimId;
 
-                if (packet.ReadBit("HasAnimKitID", index))
-                    areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.HasAnimKitId;
+                    if (packet.ReadBit("HasAnimKitID", index))
+                        areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.HasAnimKitId;
 
-                if (packet.ReadBit("unkbit50", index))
-                    areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.Unk3;
+                    if (packet.ReadBit("unkbit50", index))
+                        areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.Unk3;
 
-                bool hasUnk801 = packet.ReadBit("unkbit801", index);
+                    hasAnimProgress = packet.ReadBit("HasAnimProgress", index);
+                }
 
                 if (packet.ReadBit("HasAreaTriggerSphere", index))
                     areaTriggerTemplate.Type = (byte)AreaTriggerType.Sphere;
@@ -616,20 +644,25 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 if (packet.ReadBit("HasAreaTriggerCylinder", index))
                     areaTriggerTemplate.Type = (byte)AreaTriggerType.Cylinder;
 
+                if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                    if (packet.ReadBit("HasAreaTriggerDisk", index))
+                        areaTriggerTemplate.Type = (byte)AreaTriggerType.Disk;
+
                 bool hasAreaTriggerSpline = packet.ReadBit("HasAreaTriggerSpline", index);
 
-                if (packet.ReadBit("HasAreaTriggerCircularMovement", index))
-                    areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.HasCircularMovement;
+                if (packet.ReadBit("HasAreaTriggerOrbit", index))
+                    areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.HasOrbit;
 
                 if (ClientVersion.AddedInVersion(ClientType.Shadowlands))
-                    if (packet.ReadBit("HasAreaTriggerUnk901", index)) // seen with spellid 343597
-                        areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.Unk901;
+                    if (packet.ReadBit("HasAreaTriggerMovementScript", index)) // seen with spellid 343597
+                        areaTriggerTemplate.Flags |= (uint)AreaTriggerFlags.HasMovementScript;
 
                 if ((areaTriggerTemplate.Flags & (uint)AreaTriggerFlags.Unk3) != 0)
                     packet.ReadBit();
 
                 if (hasAreaTriggerSpline)
-                    AreaTriggerHandler.ReadAreaTriggerSpline(packet, index);
+                    foreach (var splinePoint in AreaTriggerHandler.ReadAreaTriggerSpline(spellAreaTrigger, packet, index, "AreaTriggerSpline"))
+                        Storage.AreaTriggerCreatePropertiesSplinePoints.Add(splinePoint);
 
                 if ((areaTriggerTemplate.Flags & (uint)AreaTriggerFlags.HasTargetRollPitchYaw) != 0)
                     packet.ReadVector3("TargetRollPitchYaw", index);
@@ -652,8 +685,8 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 if ((areaTriggerTemplate.Flags & (int)AreaTriggerFlags.HasAnimKitId) != 0)
                     spellAreaTrigger.AnimKitId = packet.ReadInt32("AnimKitId", index);
 
-                if (hasUnk801)
-                    packet.ReadUInt32("Unk801", index);
+                if (hasAnimProgress)
+                    packet.ReadUInt32("AnimProgress", index);
 
                 if (areaTriggerTemplate.Type == (byte)AreaTriggerType.Sphere)
                 {
@@ -680,25 +713,25 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                     var verticesCount = packet.ReadUInt32("VerticesCount", index);
                     var verticesTargetCount = packet.ReadUInt32("VerticesTargetCount", index);
 
-                    List<AreaTriggerTemplateVertices> verticesList = new List<AreaTriggerTemplateVertices>();
+                    List<AreaTriggerCreatePropertiesPolygonVertex> verticesList = new List<AreaTriggerCreatePropertiesPolygonVertex>();
 
                     areaTriggerTemplate.Data[0] = packet.ReadSingle("Height", index);
                     areaTriggerTemplate.Data[1] = packet.ReadSingle("HeightTarget", index);
 
                     for (uint i = 0; i < verticesCount; ++i)
                     {
-                        AreaTriggerTemplateVertices areaTriggerTemplateVertices = new AreaTriggerTemplateVertices
+                        AreaTriggerCreatePropertiesPolygonVertex spellAreatriggerVertices = new AreaTriggerCreatePropertiesPolygonVertex
                         {
-                            AreaTriggerId = guid.GetEntry(),
+                            areatriggerGuid = guid,
                             Idx = i
                         };
 
                         Vector2 vertices = packet.ReadVector2("Vertices", index, i);
 
-                        areaTriggerTemplateVertices.VerticeX = vertices.X;
-                        areaTriggerTemplateVertices.VerticeY = vertices.Y;
+                        spellAreatriggerVertices.VerticeX = vertices.X;
+                        spellAreatriggerVertices.VerticeY = vertices.Y;
 
-                        verticesList.Add(areaTriggerTemplateVertices);
+                        verticesList.Add(spellAreatriggerVertices);
                     }
 
                     for (var i = 0; i < verticesTargetCount; ++i)
@@ -709,8 +742,8 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                         verticesList[i].VerticeTargetY = verticesTarget.Y;
                     }
 
-                    foreach (AreaTriggerTemplateVertices vertice in verticesList)
-                        Storage.AreaTriggerTemplatesVertices.Add(vertice);
+                    foreach (AreaTriggerCreatePropertiesPolygonVertex vertice in verticesList)
+                        Storage.AreaTriggerCreatePropertiesPolygonVertices.Add(vertice);
                 }
 
                 if (areaTriggerTemplate.Type == (byte)AreaTriggerType.Cylinder)
@@ -723,34 +756,29 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                     areaTriggerTemplate.Data[5] = packet.ReadSingle("LocationZOffsetTarget", index);
                 }
 
-                if ((areaTriggerTemplate.Flags & (uint)AreaTriggerFlags.Unk901) != 0)
+                if (areaTriggerTemplate.Type == (byte)AreaTriggerType.Disk)
                 {
-                    packet.ReadInt32("Unk901"); // some id prolly, its neither npc nor spell though
-                    packet.ReadVector3("Unk901Position");
+                    areaTriggerTemplate.Data[0] = packet.ReadSingle("InnerRadius", index);
+                    areaTriggerTemplate.Data[1] = packet.ReadSingle("InnerRadiusTarget", index);
+                    areaTriggerTemplate.Data[2] = packet.ReadSingle("OuterRadius", index);
+                    areaTriggerTemplate.Data[3] = packet.ReadSingle("OuterRadiusTarget", index);
+                    areaTriggerTemplate.Data[4] = packet.ReadSingle("Height", index);
+                    areaTriggerTemplate.Data[5] = packet.ReadSingle("HeightTarget", index);
+                    areaTriggerTemplate.Data[6] = packet.ReadSingle("LocationZOffset", index);
+                    areaTriggerTemplate.Data[7] = packet.ReadSingle("LocationZOffsetTarget", index);
                 }
 
-                if ((areaTriggerTemplate.Flags & (uint)AreaTriggerFlags.HasCircularMovement) != 0)
+                if ((areaTriggerTemplate.Flags & (uint)AreaTriggerFlags.HasMovementScript) != 0)
                 {
-                    packet.ResetBitReader();
-                    var hasPathTarget = packet.ReadBit("HasPathTarget");
-                    var hasCenter = packet.ReadBit("HasCenter", index);
-                    packet.ReadBit("CounterClockwise", index);
-                    packet.ReadBit("CanLoop", index);
-
-                    packet.ReadUInt32("TimeToTarget", index);
-                    packet.ReadInt32("ElapsedTimeForMovement", index);
-                    packet.ReadUInt32("StartDelay", index);
-                    packet.ReadSingle("Radius", index);
-                    packet.ReadSingle("BlendFromRadius", index);
-                    packet.ReadSingle("InitialAngel", index);
-                    packet.ReadSingle("ZOffset", index);
-
-                    if (hasPathTarget)
-                        packet.ReadPackedGuid128("PathTarget", index);
-
-                    if (hasCenter)
-                        packet.ReadVector3("Center", index);
+                    packet.ReadInt32("SpellScriptID");
+                    packet.ReadVector3("Center");
                 }
+
+                if ((areaTriggerTemplate.Flags & (uint)AreaTriggerFlags.HasOrbit) != 0)
+                    Storage.AreaTriggerCreatePropertiesOrbits.Add(AreaTriggerHandler.ReadAreaTriggerOrbit(guid, packet, index, "AreaTriggerOrbit"));
+
+                spellAreaTrigger.Shape = areaTriggerTemplate.Type;
+                Array.Copy(areaTriggerTemplate.Data, spellAreaTrigger.ShapeData, Math.Min(areaTriggerTemplate.Data.Length, spellAreaTrigger.ShapeData.Length));
 
                 Storage.AreaTriggerTemplates.Add(areaTriggerTemplate);
             }

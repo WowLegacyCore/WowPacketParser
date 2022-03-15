@@ -5,12 +5,12 @@ using WowPacketParser.SQL;
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("gossip_menu")]
-    public class GossipMenu : IDataModel
+    public sealed record GossipMenu : IDataModel
     {
-        [DBFieldName("MenuId", true)]
-        public uint? Entry;
+        [DBFieldName("MenuID", true)]
+        public uint? MenuID;
 
-        [DBFieldName("TextId", true)]
+        [DBFieldName("TextID", true)]
         public uint? TextID;
 
         [DBFieldName("VerifiedBuild")]

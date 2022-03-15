@@ -21,13 +21,17 @@ namespace WowPacketParser.Store
 
         // Templates
         public static readonly DataBag<AreaTriggerTemplate> AreaTriggerTemplates = new DataBag<AreaTriggerTemplate>(new List<SQLOutput> { SQLOutput.areatrigger_template });
-        public static readonly DataBag<AreaTriggerTemplateVertices> AreaTriggerTemplatesVertices = new DataBag<AreaTriggerTemplateVertices>(new List<SQLOutput> { SQLOutput.areatrigger_template_polygon_vertices });
+        public static readonly DataBag<AreaTriggerCreatePropertiesOrbit> AreaTriggerCreatePropertiesOrbits = new DataBag<AreaTriggerCreatePropertiesOrbit>(new List<SQLOutput> { SQLOutput.areatrigger_create_properties_orbit });
+        public static readonly DataBag<AreaTriggerCreatePropertiesPolygonVertex> AreaTriggerCreatePropertiesPolygonVertices = new DataBag<AreaTriggerCreatePropertiesPolygonVertex>(new List<SQLOutput> { SQLOutput.areatrigger_create_properties_polygon_vertex });
+        public static readonly DataBag<AreaTriggerCreatePropertiesSplinePoint> AreaTriggerCreatePropertiesSplinePoints = new DataBag<AreaTriggerCreatePropertiesSplinePoint>(new List<SQLOutput> { SQLOutput.areatrigger_create_properties_spline_point });
         public static readonly DataBag<ConversationActor> ConversationActors = new DataBag<ConversationActor>(new List<SQLOutput> { SQLOutput.conversation_actors });
         public static readonly DataBag<ConversationActorTemplate> ConversationActorTemplates = new DataBag<ConversationActorTemplate>(new List<SQLOutput> { SQLOutput.conversation_actor_template });
         public static readonly DataBag<ConversationLineTemplate> ConversationLineTemplates = new DataBag<ConversationLineTemplate>(new List<SQLOutput> { SQLOutput.conversation_line_template });
         public static readonly DataBag<ConversationTemplate> ConversationTemplates = new DataBag<ConversationTemplate>(new List<SQLOutput> { SQLOutput.conversation_template });
         public static readonly DataBag<GameObjectTemplate> GameObjectTemplates = new DataBag<GameObjectTemplate>(new List<SQLOutput> { SQLOutput.gameobject_template });
         public static readonly DataBag<GameObjectTemplateQuestItem> GameObjectTemplateQuestItems = new DataBag<GameObjectTemplateQuestItem>(new List<SQLOutput> { SQLOutput.gameobject_template });
+        public static readonly DataBag<GameObjectQuestStarter> GameObjectQuestStarters = new DataBag<GameObjectQuestStarter>(new List<SQLOutput> { SQLOutput.gameobject_queststarter });
+        public static readonly DataBag<GameObjectQuestEnder> GameObjectQuestEnders = new DataBag<GameObjectQuestEnder>(new List<SQLOutput> { SQLOutput.gameobject_questender });
         public static readonly DataBag<ItemTemplate> ItemTemplates = new DataBag<ItemTemplate>(new List<SQLOutput> { SQLOutput.item_template });
         public static readonly DataBag<QuestTemplate> QuestTemplates = new DataBag<QuestTemplate>(new List<SQLOutput> { SQLOutput.quest_template });
         public static readonly DataBag<QuestObjective> QuestObjectives = new DataBag<QuestObjective>(new List<SQLOutput> { SQLOutput.quest_template });
@@ -39,7 +43,9 @@ namespace WowPacketParser.Store
         public static readonly DataBag<CreatureTemplateQuestItem> CreatureTemplateQuestItems = new DataBag<CreatureTemplateQuestItem>(new List<SQLOutput> { SQLOutput.creature_template });
         public static readonly DataBag<CreatureTemplateScaling> CreatureTemplateScalings = new DataBag<CreatureTemplateScaling>(new List<SQLOutput> { SQLOutput.creature_template_scaling });
         public static readonly DataBag<CreatureTemplateModel> CreatureTemplateModels = new DataBag<CreatureTemplateModel>(new List<SQLOutput> { SQLOutput.creature_template });
-
+        public static readonly DataBag<CreatureTemplateSpell> CreatureTemplateSpells = new DataBag<CreatureTemplateSpell>(new List<SQLOutput> { SQLOutput.creature_template });
+        public static readonly DataBag<CreatureQuestStarter> CreatureQuestStarters = new DataBag<CreatureQuestStarter>(new List<SQLOutput> { SQLOutput.creature_queststarter });
+        public static readonly DataBag<CreatureQuestEnder> CreatureQuestEnders = new DataBag<CreatureQuestEnder>(new List<SQLOutput> { SQLOutput.creature_questender });
         // Vendor & trainer
         public static readonly DataBag<NpcTrainer> NpcTrainers = new DataBag<NpcTrainer>(new List<SQLOutput> { SQLOutput.npc_trainer }); // legacy 3.3.5 support
         public static readonly DataBag<NpcVendor> NpcVendors = new DataBag<NpcVendor>(new List<SQLOutput> { SQLOutput.npc_vendor });
@@ -72,10 +78,9 @@ namespace WowPacketParser.Store
         public static readonly DataBag<PlayerCreateInfo> StartPositions = new DataBag<PlayerCreateInfo>(new List<SQLOutput> { SQLOutput.playercreateinfo });
 
         // Gossips (MenuId, TextId)
+        public static readonly Dictionary<uint, uint> CreatureDefaultGossips = new Dictionary<uint, uint>();
         public static readonly DataBag<GossipMenu> Gossips = new DataBag<GossipMenu>(new List<SQLOutput> { SQLOutput.gossip_menu });
-        public static readonly DataBag<GossipMenuOption> GossipMenuOptions = new DataBag<GossipMenuOption>(new List<SQLOutput> { SQLOutput.gossip_menu_option });
-        public static readonly DataBag<GossipMenuOptionAction> GossipMenuOptionActions = new DataBag<GossipMenuOptionAction>(new List<SQLOutput> { SQLOutput.gossip_menu_option });
-        public static readonly DataBag<GossipMenuOptionBox> GossipMenuOptionBoxes = new DataBag<GossipMenuOptionBox>(new List<SQLOutput> { SQLOutput.gossip_menu_option });
+        public static readonly StoreDictionary<(uint?, uint?), GossipMenuOption> GossipMenuOptions = new StoreDictionary<(uint?, uint?), GossipMenuOption>(new List<SQLOutput> { SQLOutput.gossip_menu_option });
 
         // Quest POI (QuestId, Id)
         public static readonly DataBag<QuestPOI> QuestPOIs = new DataBag<QuestPOI>(new List<SQLOutput> { SQLOutput.quest_poi_points });
@@ -113,7 +118,7 @@ namespace WowPacketParser.Store
 
         public static readonly DataBag<HotfixData> HotfixDatas = new DataBag<HotfixData>(new List<SQLOutput> { SQLOutput.hotfix_data });
         public static readonly DataBag<HotfixBlob> HotfixBlobs = new DataBag<HotfixBlob>(new List<SQLOutput> { SQLOutput.hotfix_blob });
-        public static readonly DataBag<HotfixOptionalData> HotfixOptionalDatas = new DataBag<HotfixOptionalData>(new List<SQLOutput> {});
+        public static readonly DataBag<HotfixOptionalData> HotfixOptionalDatas = new DataBag<HotfixOptionalData>(new List<SQLOutput> { SQLOutput.hotfix_optional_data });
         // Scenes
         public static readonly DataBag<SceneTemplate> Scenes = new DataBag<SceneTemplate>(new List<SQLOutput> { SQLOutput.scene_template });
 
@@ -140,8 +145,10 @@ namespace WowPacketParser.Store
 
             Objects.Clear();
 
+            AreaTriggerCreatePropertiesOrbits.Clear();
+            AreaTriggerCreatePropertiesPolygonVertices.Clear();
+            AreaTriggerCreatePropertiesSplinePoints.Clear();
             AreaTriggerTemplates.Clear();
-            AreaTriggerTemplatesVertices.Clear();
             ConversationActors.Clear();
             ConversationActorTemplates.Clear();
             ConversationLineTemplates.Clear();
@@ -159,6 +166,7 @@ namespace WowPacketParser.Store
             CreatureTemplateQuestItems.Clear();
             CreatureTemplateScalings.Clear();
             CreatureTemplateModels.Clear();
+            CreatureTemplateSpells.Clear();
 
             NpcTrainers.Clear();
             NpcVendors.Clear();
@@ -185,8 +193,6 @@ namespace WowPacketParser.Store
 
             Gossips.Clear();
             GossipMenuOptions.Clear();
-            GossipMenuOptionActions.Clear();
-            GossipMenuOptionBoxes.Clear();
 
             QuestPOIs.Clear();
             QuestPOIPoints.Clear();
@@ -225,7 +231,7 @@ namespace WowPacketParser.Store
 
             BroadcastTexts.Clear();
             BroadcastTextLocales.Clear();
-            
+
             PlayerChoices.Clear();
             PlayerChoiceLocales.Clear();
             PlayerChoiceResponses.Clear();

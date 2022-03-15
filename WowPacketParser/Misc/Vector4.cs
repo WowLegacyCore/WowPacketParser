@@ -12,6 +12,11 @@ namespace WowPacketParser.Misc
             O = o;
         }
 
+        public Vector4(Vector3 xyz, float o)
+            : this(xyz.X, xyz.Y, xyz.Z, o)
+        {
+        }
+
         public float X;
 
         public float Y;
@@ -63,10 +68,10 @@ namespace WowPacketParser.Misc
             return result;
         }
 
-        public static implicit operator WoWPacketParser.Proto.Vec4(Vector4 vector) =>
+        public static implicit operator WowPacketParser.Proto.Vec4(Vector4 vector) =>
             new() {X = vector.X, Y = vector.Y, Z = vector.Z, O = vector.O};
 
-        public static implicit operator Vector4(WoWPacketParser.Proto.Vec4 vector) =>
+        public static implicit operator Vector4(WowPacketParser.Proto.Vec4 vector) =>
             new() {X = vector.X, Y = vector.Y, Z = vector.Z, O = vector.O};
     }
 }

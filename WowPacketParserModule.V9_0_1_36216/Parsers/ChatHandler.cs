@@ -1,7 +1,7 @@
 ﻿using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Parsing;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
 
@@ -39,12 +39,15 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             packet.ReadBit("HideChatLog");
             packet.ReadBit("FakeSenderName");
             bool unk801bit = packet.ReadBit("Unk801_Bit");
+            bool hasChannelGuid = false;
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_0_39185))
+                hasChannelGuid = packet.ReadBit("HasChannelGUID");
 
             text.SenderName = packet.ReadWoWString("Sender Name", senderNameLen);
             text.ReceiverName = packet.ReadWoWString("Receiver Name", receiverNameLen);
             packet.ReadWoWString("Addon Message Prefix", prefixLen);
             packet.ReadWoWString("Channel Name", channelLen);
-            
+
             chatPacket.Text = text.Text = packet.ReadWoWString("Text", textLen);
             chatPacket.Sender = text.SenderGUID.ToUniversalGuid();
             chatPacket.Target = text.ReceiverGUID.ToUniversalGuid();
@@ -54,6 +57,9 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
 
             if (unk801bit)
                 packet.ReadUInt32("Unk801");
+
+            if (hasChannelGuid)
+                packet.ReadPackedGuid128("ChannelGUID");
 
             uint entry = 0;
             if (text.SenderGUID.GetObjectType() == ObjectType.Unit)
@@ -75,6 +81,9 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_0_5_37503))
             {
                 var count = packet.ReadUInt32("SpellVisualKitCount");
+                if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                    packet.ReadInt32("SequenceVariation");
+
                 for (var i = 0; i < count; ++i)
                     packet.ReadUInt32("SpellVisualKitID", i);
             }
@@ -84,6 +93,24 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
 
             packetEmote.Emote = (int) emote;
             packetEmote.Sender = guid.ToUniversalGuid();
+        }
+
+        [Parser(Opcode.CMSG_SEND_TEXT_EMOTE)]
+        public static void HandleSendTextEmote(Packet packet)
+        {
+            packet.ReadPackedGuid128("Target");
+            packet.ReadInt32E<EmoteTextType>("EmoteID");
+            packet.ReadInt32("SoundIndex");
+
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_0_5_37503) || ClientVersion.IsBurningCrusadeClassicClientVersionBuild(ClientVersion.Build))
+            {
+                var count = packet.ReadUInt32("SpellVisualKitCount");
+                if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                    packet.ReadInt32("SequenceVariation");
+
+                for (var i = 0; i < count; ++i)
+                    packet.ReadUInt32("SpellVisualKitID", i);
+            }
         }
     }
 }

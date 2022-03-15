@@ -3,7 +3,7 @@ using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.PacketStructures;
 using WowPacketParser.Parsing;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
 
@@ -21,7 +21,8 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
         {
             packet.ReadInt32<ItemId>("ItemID", indexes);
             packet.ReadInt32("Slot", indexes);
-            packet.ReadInt32("Count", indexes);
+            if(ClientVersion.RemovedInVersion(ClientVersionBuild.V9_1_0_39185))
+                packet.ReadInt32("Count", indexes);
         }
 
         public static void ReadOptionalCurrency(Packet packet, params object[] indexes)
@@ -31,7 +32,7 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             packet.ReadInt32("Count", indexes);
         }
 
-        public static void ReadSpellCastRequest(Packet packet, params object[] idx)
+        public static uint ReadSpellCastRequest(Packet packet, params object[] idx)
         {
             packet.ReadPackedGuid128("CastID", idx);
 
@@ -69,6 +70,8 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
 
             for (var i = 0; i < weightCount; ++i)
                 V6_0_2_19033.Parsers.SpellHandler.ReadSpellWeight(packet, idx, "Weight", i);
+
+            return spellId;
         }
 
         public static PacketSpellData ReadSpellCastData(Packet packet, params object[] idx)

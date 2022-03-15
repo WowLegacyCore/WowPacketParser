@@ -1,4 +1,4 @@
-using WowPacketParser.Misc;
+﻿using WowPacketParser.Misc;
 
 namespace WowPacketParser.Enums.Version.V2_5_1_38835
 {
@@ -17,7 +17,7 @@ namespace WowPacketParser.Enums.Version.V2_5_1_38835
             }
         }
 
-        private static readonly BiDictionary<Opcode, int> ClientOpcodes = new()
+        private static readonly BiDictionary<Opcode, int> ClientOpcodes = new BiDictionary<Opcode, int>
         {
             {Opcode.CMSG_ACCEPT_GUILD_INVITE, 0x35FD},
             {Opcode.CMSG_ACCEPT_TRADE, 0x315A},
@@ -478,8 +478,8 @@ namespace WowPacketParser.Enums.Version.V2_5_1_38835
             {Opcode.CMSG_PETITION_SHOW_SIGNATURES, 0x34C9},
             {Opcode.CMSG_PING, 0x3768},
             {Opcode.CMSG_PLAYER_LOGIN, 0x35EB},
-            {Opcode.CMSG_PLAYER_SHOWING_CLOAK, 0x3561},
-            {Opcode.CMSG_PLAYER_SHOWING_HELM, 0x3560},
+            {Opcode.CMSG_SHOWING_CLOAK, 0x3561},
+            {Opcode.CMSG_SHOWING_HELM, 0x3560},
             {Opcode.CMSG_PUSH_QUEST_TO_PARTY, 0x349F},
             {Opcode.CMSG_PVP_LOG_DATA, 0x317F},
             {Opcode.CMSG_QUERY_BATTLE_PET_NAME, 0x3271},
@@ -701,7 +701,7 @@ namespace WowPacketParser.Enums.Version.V2_5_1_38835
             {Opcode.CMSG_WRAP_ITEM, 0x3994},
         };
 
-        private static readonly BiDictionary<Opcode, int> ServerOpcodes = new()
+        private static readonly BiDictionary<Opcode, int> ServerOpcodes = new BiDictionary<Opcode, int>
         {
             {Opcode.SMSG_AUTH_FAILED, 0x256C},
             {Opcode.SMSG_AUTH_RESPONSE, 0x256D},
@@ -719,6 +719,7 @@ namespace WowPacketParser.Enums.Version.V2_5_1_38835
             {Opcode.SMSG_PRELOAD_CHILD_MAP, 0x2579},
             {Opcode.SMSG_UNLOAD_CHILD_MAP, 0x257A},
             {Opcode.SMSG_MOUNT_RESULT, 0x257B},
+            {Opcode.SMSG_DISMOUNT, 0x26AC},
             {Opcode.SMSG_DISMOUNT_RESULT, 0x257C},
             {Opcode.SMSG_BIND_POINT_UPDATE, 0x257D},
             {Opcode.SMSG_RESURRECT_REQUEST, 0x257E},
@@ -1229,7 +1230,7 @@ namespace WowPacketParser.Enums.Version.V2_5_1_38835
             {Opcode.SMSG_CACHE_INFO, 0x291D},
             {Opcode.SMSG_QUERY_ITEM_TEXT_RESPONSE, 0x291E},
             {Opcode.SMSG_TREASURE_PICKER_RESPONSE, 0x291F},
-            {Opcode.SMSG_QUERY_ARENA_TEAM_RESPONSE, 0x2920},
+            {Opcode.SMSG_ARENA_TEAM_QUERY_RESPONSE, 0x2920},
             {Opcode.SMSG_BATTLEFIELD_STATUS_NEED_CONFIRMATION, 0x2922},
             {Opcode.SMSG_BATTLEFIELD_STATUS_ACTIVE, 0x2923},
             {Opcode.SMSG_BATTLEFIELD_STATUS_QUEUED, 0x2924},
@@ -1615,6 +1616,6 @@ namespace WowPacketParser.Enums.Version.V2_5_1_38835
             {Opcode.SMSG_RESET_COMPRESSION_CONTEXT, 0x304F},
         };
 
-        private static readonly BiDictionary<Opcode, int> MiscOpcodes = new();
+        private static readonly BiDictionary<Opcode, int> MiscOpcodes = new BiDictionary<Opcode, int>();
     }
 }

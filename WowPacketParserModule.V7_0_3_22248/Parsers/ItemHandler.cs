@@ -34,9 +34,9 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
             packet.ReadUInt32("QuantityInInventory");
             packet.ReadInt32("DungeonEncounterID");
 
+            packet.ReadUInt32("BattlePetSpeciesID");
             packet.ReadUInt32("BattlePetBreedID");
             packet.ReadUInt32("BattlePetBreedQuality");
-            packet.ReadUInt32("BattlePetSpeciesID");
             packet.ReadUInt32("BattlePetLevel");
 
             packet.ReadPackedGuid128("ItemGUID");
@@ -55,11 +55,12 @@ namespace WowPacketParserModule.V7_0_3_22248.Parsers
         [Parser(Opcode.CMSG_USE_ITEM)]
         public static void HandleUseItem(Packet packet)
         {
-            packet.ReadByte("PackSlot");
-            packet.ReadByte("Slot");
-            packet.ReadPackedGuid128("CastItem");
+            var useItem = packet.Holder.ClientUseItem = new();
+            useItem.PackSlot = packet.ReadByte("PackSlot");
+            useItem.ItemSlot = packet.ReadByte("Slot");
+            useItem.CastItem = packet.ReadPackedGuid128("CastItem");
 
-            SpellHandler.ReadSpellCastRequest(packet, "Cast");
+            useItem.SpellId = SpellHandler.ReadSpellCastRequest(packet, "Cast");
         }
 
         [Parser(Opcode.CMSG_USE_TOY)]

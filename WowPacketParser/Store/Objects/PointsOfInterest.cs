@@ -5,7 +5,7 @@ using WowPacketParser.SQL;
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("points_of_interest")]
-    public sealed class PointsOfInterest : IDataModel
+    public sealed record PointsOfInterest : IDataModel
     {
         [DBFieldName("ID", true, true)]
         public object ID;
@@ -15,6 +15,9 @@ namespace WowPacketParser.Store.Objects
 
         [DBFieldName("PositionY")]
         public float? PositionY;
+
+        [DBFieldName("PositionZ", TargetedDatabase.Shadowlands)]
+        public float? PositionZ;
 
         [DBFieldName("Icon")]
         public GossipPOIIcon? Icon;
@@ -27,6 +30,9 @@ namespace WowPacketParser.Store.Objects
 
         [DBFieldName("Name")]
         public string Name;
+
+        [DBFieldName("Unknown905", TargetedDatabase.Shadowlands)]
+        public int? Unknown905;
 
         [DBFieldName("VerifiedBuild")]
         public int? VerifiedBuild = ClientVersion.BuildInt;

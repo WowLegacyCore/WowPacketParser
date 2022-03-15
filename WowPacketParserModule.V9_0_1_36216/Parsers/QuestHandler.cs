@@ -25,13 +25,14 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             var bits13 = packet.ReadBits(9);
             packet.ReadWoWString("QuestTitle", bits13, indexes);
         }
-        public static void ReadRewardItem(Packet packet, params object[] idx)
+        public static ItemInstance ReadRewardItem(Packet packet, params object[] idx)
         {
             packet.ResetBitReader();
             packet.ReadBitsE<LootItemType>("LootItemType", 2, idx);
-            Substructures.ItemHandler.ReadItemInstance(packet, idx);
+            var itemInstance = Substructures.ItemHandler.ReadItemInstance(packet, idx);
 
             packet.ReadInt32("Quantity", idx);
+            return itemInstance;
         }
 
         public static void ReadQuestRewards(Packet packet, params object[] idx)
@@ -173,6 +174,10 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             quest.RewardNumSkillUps = (uint)packet.ReadInt32("RewardNumSkillUps");
             quest.QuestGiverPortrait = (uint)packet.ReadInt32("PortraitGiver");
             quest.PortraitGiverMount = (uint)packet.ReadInt32("PortraitGiverMount");
+
+            if(ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_0_39185))
+                quest.PortraitGiverModelSceneID = packet.ReadInt32("PortraitGiverModelSceneID");
+
             quest.QuestTurnInPortrait = (uint)packet.ReadInt32("PortraitTurnIn");
 
             quest.RewardFactionID = new uint?[5];
@@ -376,7 +381,7 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
         [Parser(Opcode.SMSG_QUEST_GIVER_OFFER_REWARD_MESSAGE)]
         public static void QuestGiverOfferReward(Packet packet)
         {
-            packet.ReadPackedGuid128("QuestGiverGUID");
+            var questgiverGUID = packet.ReadPackedGuid128("QuestGiverGUID");
 
             packet.ReadInt32("QuestGiverCreatureID");
             int id = packet.ReadInt32("QuestID");
@@ -385,6 +390,8 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             {
                 ID = (uint)id
             };
+
+            CoreParsers.QuestHandler.AddQuestEnder(questgiverGUID, (uint)id);
 
             for (int i = 0; i < 2; i++)
                 packet.ReadInt32("QuestFlags", i);
@@ -412,6 +419,8 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             packet.ReadInt32("QuestPackageID");
             packet.ReadInt32("PortraitGiver");
             packet.ReadInt32("PortraitGiverMount");
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_0_39185))
+                packet.ReadInt32("PortraitGiverModelSceneID");
             packet.ReadInt32("PortraitTurnIn");
 
             packet.ResetBitReader();
@@ -436,15 +445,16 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
         [Parser(Opcode.CMSG_QUEST_GIVER_CHOOSE_REWARD)]
         public static void HandleQuestChooseReward(Packet packet)
         {
-            packet.ReadPackedGuid128("QuestGiverGUID");
-            packet.ReadInt32("QuestID");
-            ReadRewardItem(packet, "ItemChoice");
+            var chooseReward = packet.Holder.ClientQuestGiverChooseReward = new();
+            chooseReward.QuestGiver = packet.ReadPackedGuid128("QuestGiverGUID");
+            chooseReward.QuestId = (uint)packet.ReadInt32("QuestID");
+            chooseReward.Item = (uint)ReadRewardItem(packet, "ItemChoice").ItemID;
         }
 
         [Parser(Opcode.SMSG_QUEST_GIVER_QUEST_DETAILS)]
         public static void HandleQuestGiverQuestDetails(Packet packet)
         {
-            packet.ReadPackedGuid128("QuestGiverGUID");
+            var questgiverGUID = packet.ReadPackedGuid128("QuestGiverGUID");
             packet.ReadPackedGuid128("InformUnit");
 
             int id = packet.ReadInt32("QuestID");
@@ -453,9 +463,13 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                 ID = (uint)id
             };
 
+            CoreParsers.QuestHandler.AddQuestStarter(questgiverGUID, (uint)id);
+
             packet.ReadInt32("QuestPackageID");
             packet.ReadInt32("PortraitGiver");
             packet.ReadInt32("PortraitGiverMount");
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_0_39185))
+                packet.ReadInt32("PortraitGiverModelSceneID");
             packet.ReadInt32("PortraitTurnIn");
 
             for (int i = 0; i < 2; i++)
@@ -575,8 +589,19 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             packet.ReadPackedGuid128("SenderGUID");
             var uiTextureKitId = packet.ReadInt32("UiTextureKitID");
             var soundKitId = packet.ReadUInt32("SoundKitID");
+            uint? closeSoundKitId = null;
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                closeSoundKitId = packet.ReadUInt32("CloseUISoundKitID");
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_0_39185))
+                packet.ReadByte("NumRerolls");
+            long? duration = null;
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                duration = packet.ReadInt64("Duration");
             packet.ResetBitReader();
             var questionLength = packet.ReadBits(8);
+            var pendingChoiceTextLength = 0u;
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                pendingChoiceTextLength = packet.ReadBits(8);
             packet.ReadBit("CloseChoiceFrame");
             var hideWarboardHeader = packet.ReadBit("HideWarboardHeader");
             var keepOpenAfterChoice = packet.ReadBit("KeepOpenAfterChoice");
@@ -585,13 +610,19 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                 ReadPlayerChoiceResponse(packet, choiceId, i, "PlayerChoiceResponse", i);
 
             var question = packet.ReadWoWString("Question", questionLength);
+            var pendingChoiceText = "";
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+                pendingChoiceText = packet.ReadWoWString("PendingChoiceText", pendingChoiceTextLength);
 
             Storage.PlayerChoices.Add(new PlayerChoiceTemplate
             {
                 ChoiceId = choiceId,
                 UiTextureKitId = uiTextureKitId,
                 SoundKitId = soundKitId,
+                CloseSoundKitId = closeSoundKitId,
+                Duration = duration,
                 Question = question,
+                PendingChoiceText = pendingChoiceText,
                 HideWarboardHeader = hideWarboardHeader,
                 KeepOpenAfterChoice = keepOpenAfterChoice
             }, packet.TimeSpan);
@@ -604,6 +635,34 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                     Locale = ClientLocale.PacketLocaleString,
                     Question = question
                 }, packet.TimeSpan);
+            }
+        }
+
+        public static void ReadPlayerChoiceResponseMawPower(Packet packet, params object[] indexes)
+        {
+            packet.ResetBitReader();
+
+            packet.ReadInt32("Unused901_1", indexes);
+            packet.ReadInt32("TypeArtFileID", indexes);
+
+            if (ClientVersion.RemovedInVersion(ClientVersionBuild.V9_2_0_42423))
+            {
+                packet.ReadInt32("Rarity", indexes);
+                packet.ReadUInt32("RarityColor", indexes);
+            }
+            packet.ReadInt32("Unused901_2", indexes);
+            packet.ReadInt32("SpellID", indexes);
+            packet.ReadInt32("MaxStacks", indexes);
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_2_0_42423))
+            {
+                var hasRarity = packet.ReadBit();
+                var hasRarityColor = packet.ReadBit();
+
+                if (hasRarity)
+                    packet.ReadInt32("Rarity", indexes);
+
+                if (hasRarityColor)
+                    packet.ReadUInt32("RarityColor", indexes);
             }
         }
 
@@ -628,6 +687,7 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             var confirmationTextLength = packet.ReadBits(7);
             var hasRewardQuestID = packet.ReadBit();
             var hasReward = packet.ReadBit();
+            var hasMawPower = packet.ReadBit();
             if (hasReward)
                 V6_0_2_19033.Parsers.QuestHandler.ReadPlayerChoiceResponseReward(packet, choiceId, responseId, "PlayerChoiceResponseReward", indexes);
 
@@ -641,6 +701,9 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
             var rewardQuestID = 0u;
             if (hasRewardQuestID)
                 rewardQuestID = packet.ReadUInt32("RewardQuestID", indexes);
+
+            if (hasMawPower)
+                ReadPlayerChoiceResponseMawPower(packet, indexes);
 
             Storage.PlayerChoiceResponses.Add(new PlayerChoiceResponseTemplate
             {
@@ -679,6 +742,49 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                     Confirmation = confirmation
                 }, packet.TimeSpan);
             }
+        }
+
+        [Parser(Opcode.CMSG_CHOICE_RESPONSE, ClientVersionBuild.V9_1_0_39185)]
+        public static void HandleChoiceResponse(Packet packet)
+        {
+            packet.ReadInt32("ChoiceID");
+            packet.ReadInt32("ResponseID");
+            packet.ReadBit("IsReroll");
+        }
+
+        [Parser(Opcode.SMSG_WORLD_QUEST_UPDATE_RESPONSE)]
+        public static void HandleWorldQuestUpdateResponse(Packet packet)
+        {
+            var count = packet.ReadInt32("Count");
+
+            for (int i = 0; i < count; i++)
+            {
+                if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_0_5_37503))
+                    packet.ReadTime64("LastUpdate", i);
+                else
+                    packet.ReadTime("LastUpdate", i);
+
+                packet.ReadUInt32<QuestId>("QuestID", i);
+                packet.ReadUInt32("Timer", i);
+                packet.ReadInt32("VariableID", i);
+                packet.ReadInt32("Value", i);
+            }
+        }
+
+        [Parser(Opcode.SMSG_QUEST_PUSH_RESULT)]
+        public static void HandleQuestPushResult(Packet packet)
+        {
+            packet.ReadPackedGuid128("SenderGUID");
+
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_5_40772))
+            {
+                packet.ReadByteE<QuestPushReason915>("Result");
+
+                var questTitleLength = packet.ReadBits(9);
+                packet.ReadWoWString("QuestTitle", questTitleLength);
+            }
+            else
+                packet.ReadByteE<QuestPushReason>("Result");
         }
     }
 }

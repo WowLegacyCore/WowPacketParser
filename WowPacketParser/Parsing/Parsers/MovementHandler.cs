@@ -6,7 +6,7 @@ using WowPacketParser.Enums;
 using WowPacketParser.Enums.Version;
 using WowPacketParser.Misc;
 using WowPacketParser.PacketStructures;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 using WowPacketParser.Store;
 using WowPacketParser.Store.Objects;
 
@@ -35,13 +35,13 @@ namespace WowPacketParser.Parsing.Parsers
         {
             var info = new MovementInfo
             {
-                Flags = packet.ReadInt32E<MovementFlag>("Movement Flags", index)
+                Flags = (uint)packet.ReadInt32E<MovementFlag>("Movement Flags", index)
             };
 
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V3_0_2_9056))
-                info.FlagsExtra = packet.ReadInt16E<MovementFlagExtra>("Extra Movement Flags", index);
+                info.Flags2 = (uint)packet.ReadInt16E<MovementFlag2>("Extra Movement Flags", index);
             else
-                info.FlagsExtra = packet.ReadByteE<MovementFlagExtra>("Extra Movement Flags", index);
+                info.Flags2 = (uint)packet.ReadByteE<MovementFlag2>("Extra Movement Flags", index);
 
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V4_2_2_14545))
                 if (packet.ReadGuid("Guid 2", index) != guid)
@@ -54,28 +54,30 @@ namespace WowPacketParser.Parsing.Parsers
 
             if (info.Flags.HasAnyFlag(MovementFlag.OnTransport))
             {
-                if (ClientVersion.AddedInVersion(ClientVersionBuild.V3_1_0_9767))
-                    info.TransportGuid = packet.ReadPackedGuid("Transport GUID", index);
-                else
-                    info.TransportGuid = packet.ReadGuid("Transport GUID", index);
+                info.Transport = new MovementInfo.TransportInfo();
 
-                info.TransportOffset = packet.ReadVector4("Transport Position", index);
+                if (ClientVersion.AddedInVersion(ClientVersionBuild.V3_1_0_9767))
+                    info.Transport.Guid = packet.ReadPackedGuid("Transport GUID", index);
+                else
+                    info.Transport.Guid = packet.ReadGuid("Transport GUID", index);
+
+                info.Transport.Offset = packet.ReadVector4("Transport Position", index);
                 packet.ReadInt32("Transport Time", index);
 
                 if (ClientVersion.AddedInVersion(ClientType.WrathOfTheLichKing))
                     packet.ReadByte("Transport Seat", index);
 
-                if (info.FlagsExtra.HasAnyFlag(MovementFlagExtra.InterpolateMove))
+                if (info.Flags2.HasAnyFlag(MovementFlag2.InterpolateMove))
                     packet.ReadInt32("Transport Time", index);
             }
 
             if (info.Flags.HasAnyFlag(MovementFlag.Swimming | MovementFlag.Flying) ||
-                info.FlagsExtra.HasAnyFlag(MovementFlagExtra.AlwaysAllowPitching))
+                info.Flags2.HasAnyFlag(MovementFlag2.AlwaysAllowPitching))
                 packet.ReadSingle("Swim Pitch", index);
 
             if (ClientVersion.AddedInVersion(ClientType.Cataclysm))
             {
-                if (info.FlagsExtra.HasAnyFlag(MovementFlagExtra.InterpolateTurning))
+                if (info.Flags2.HasAnyFlag(MovementFlag2.InterpolateTurning))
                 {
                     packet.ReadInt32("Fall Time", index);
                     packet.ReadSingle("Fall Velocity", index);
@@ -111,10 +113,9 @@ namespace WowPacketParser.Parsing.Parsers
         {
             var info = new MovementInfo
             {
-                Flags = packet.ReadBitsE<MovementFlag>("Movement Flags", 30, index)
+                Flags = (uint)packet.ReadBitsE<Enums.v4.MovementFlag>("Movement Flags", 30, index),
+                Flags2 = (uint)packet.ReadBitsE<Enums.v4.MovementFlag2>("Extra Movement Flags", 12, index)
             };
-
-            packet.ReadBitsE<MovementFlagExtra>("Extra Movement Flags", 12, index);
 
             var onTransport = packet.ReadBit("OnTransport", index);
             var hasInterpolatedMovement = false;
@@ -147,8 +148,9 @@ namespace WowPacketParser.Parsing.Parsers
 
             if (onTransport)
             {
-                info.TransportGuid = packet.ReadGuid("Transport GUID", index);
-                info.TransportOffset = packet.ReadVector4("Transport Position", index);
+                info.Transport = new MovementInfo.TransportInfo();
+                info.Transport.Guid = packet.ReadGuid("Transport GUID", index);
+                info.Transport.Offset = packet.ReadVector4("Transport Position", index);
                 packet.ReadByte("Transport Seat", index);
                 packet.ReadInt32("Transport Time", index);
                 if (hasInterpolatedMovement)
@@ -288,6 +290,7 @@ namespace WowPacketParser.Parsing.Parsers
             else
             {
                 var newpos = packet.ReadVector3("Waypoint Endpoint");
+                monsterMove.Points.Add(newpos);
 
                 Vector3 mid = (pos + newpos) * 0.5f;
 
@@ -331,6 +334,7 @@ namespace WowPacketParser.Parsing.Parsers
             else
             {
                 var newpos = packet.ReadVector3("Waypoint Endpoint");
+                monsterMove.Points.Add(newpos);
 
                 var mid = new Vector3
                 {
@@ -411,6 +415,7 @@ namespace WowPacketParser.Parsing.Parsers
             else
             {
                 var newpos = packet.ReadVector3("Waypoint Endpoint");
+                monsterMove.Points.Add(newpos);
 
                 var mid = new Vector3
                 {
@@ -527,7 +532,7 @@ namespace WowPacketParser.Parsing.Parsers
         [Parser(Opcode.MSG_MOVE_HEARTBEAT, ClientVersionBuild.V4_2_2_14545, ClientVersionBuild.V4_3_0_15005)]
         public static void HandleMovementHeartbeat422(Packet packet)
         {
-            packet.ReadBitsE<MovementFlag>("Movement flags", 30);
+            packet.ReadBitsE<Enums.v4.MovementFlag>("Movement flags", 30);
 
             packet.ReadBit("HasSplineData");
 
@@ -540,7 +545,7 @@ namespace WowPacketParser.Parsing.Parsers
             guidBytes[4] = packet.ReadBit();
             guidBytes[3] = packet.ReadBit();
 
-            packet.ReadBitsE<MovementFlagExtra>("Movement flags extra", 12);
+            packet.ReadBitsE<Enums.v4.MovementFlag2>("Movement flags extra", 12);
 
             guidBytes[5] = packet.ReadBit();
             var splineElevation = packet.ReadBit("SplineElevation"); // OR Swimming
@@ -626,7 +631,7 @@ namespace WowPacketParser.Parsing.Parsers
         [Parser(Opcode.MSG_MOVE_HEARTBEAT, ClientVersionBuild.V4_3_3_15354, ClientVersionBuild.V4_3_4_15595)]
         public static void HandleMovementHeartbeat433(Packet packet)
         {
-            packet.ReadBitsE<MovementFlag>("Movement flags", 30);
+            packet.ReadBitsE<Enums.v4.MovementFlag>("Movement flags", 30);
 
             packet.ReadBit("HasSplineData");
 
@@ -639,7 +644,7 @@ namespace WowPacketParser.Parsing.Parsers
             guidBytes[4] = packet.ReadBit();
             guidBytes[3] = packet.ReadBit();
 
-            packet.ReadBitsE<MovementFlagExtra>("Movement flags extra", 12);
+            packet.ReadBitsE<Enums.v4.MovementFlag2>("Movement flags extra", 12);
 
             guidBytes[5] = packet.ReadBit();
             var splineElevation = packet.ReadBit("SplineElevation"); // OR Swimming
@@ -732,7 +737,7 @@ namespace WowPacketParser.Parsing.Parsers
             guidBytes[7] = packet.ReadBit();
             guidBytes[3] = packet.ReadBit();
 
-            packet.ReadBitsE<MovementFlag>("Movement flags", 30);
+            packet.ReadBitsE<Enums.v4.MovementFlag>("Movement flags", 30);
 
             guidBytes[5] = packet.ReadBit();
             guidBytes[2] = packet.ReadBit();
@@ -742,7 +747,7 @@ namespace WowPacketParser.Parsing.Parsers
 
             guidBytes[4] = packet.ReadBit();
 
-            packet.ReadBitsE<MovementFlagExtra>("Movement flags extra", 12);
+            packet.ReadBitsE<Enums.v4.MovementFlag2>("Movement flags extra", 12);
 
             var splineElevation = packet.ReadBit("SplineElevation"); // OR Swimming
             var onTransport = packet.ReadBit("OnTransport");
@@ -832,7 +837,7 @@ namespace WowPacketParser.Parsing.Parsers
             var guidBytes = new byte[8];
             var transportGuidBytes = new byte[8];
 
-            info.Flags = packet.ReadBitsE<MovementFlag>("Movement Flags", 30);
+            info.Flags = (uint)packet.ReadBitsE<Enums.v4.MovementFlag>("Movement Flags", 30);
 
             guidBytes[4] = packet.ReadBit();
             guidBytes[2] = packet.ReadBit();
@@ -842,7 +847,7 @@ namespace WowPacketParser.Parsing.Parsers
             guidBytes[3] = packet.ReadBit();
             guidBytes[5] = packet.ReadBit();
 
-            packet.ReadBitsE<MovementFlagExtra>("Extra Movement Flags", 12);
+            info.Flags2 = (uint)packet.ReadBitsE<Enums.v4.MovementFlag2>("Extra Movement Flags", 12);
 
             guidBytes[0] = packet.ReadBit();
             guidBytes[7] = packet.ReadBit();
@@ -1033,7 +1038,7 @@ namespace WowPacketParser.Parsing.Parsers
 
             info.HasSplineData = packet.ReadBit("HasSplineData");
 
-            info.Flags = packet.ReadBitsE<MovementFlag>("Movement Flags", 30);
+            info.Flags = (uint)packet.ReadBitsE<Enums.v4.MovementFlag>("Movement Flags", 30);
 
             guidBytes[4] = packet.ReadBit();
             guidBytes[6] = packet.ReadBit();
@@ -1041,7 +1046,7 @@ namespace WowPacketParser.Parsing.Parsers
             guidBytes[5] = packet.ReadBit();
             guidBytes[7] = packet.ReadBit();
 
-            packet.ReadBitsE<MovementFlagExtra>("Extra Movement Flags", 12);
+            info.Flags2 = (uint)packet.ReadBitsE<Enums.v4.MovementFlag2>("Extra Movement Flags", 12);
 
             guidBytes[1] = packet.ReadBit();
 
@@ -1159,10 +1164,10 @@ namespace WowPacketParser.Parsing.Parsers
             guidBytes[1] = packet.ReadBit();
             guidBytes[4] = packet.ReadBit();
             guidBytes[0] = packet.ReadBit();
-            info.Flags = packet.ReadBitsE<MovementFlag>("Movement Flags", 30);
+            info.Flags = (uint)packet.ReadBitsE<Enums.v4.MovementFlag>("Movement Flags", 30);
             var havePitch = packet.ReadBit("HavePitch");
             guidBytes[2] = packet.ReadBit();
-            packet.ReadBitsE<MovementFlagExtra>("Extra Movement Flags", 12);
+            info.Flags2 = (uint)packet.ReadBitsE<Enums.v4.MovementFlag2>("Extra Movement Flags", 12);
             guidBytes[6] = packet.ReadBit();
 
             var haveFallData = packet.ReadBit("HaveFallData");
@@ -1289,7 +1294,7 @@ namespace WowPacketParser.Parsing.Parsers
                 packet.Direction == Direction.ServerToClient) && ClientVersion.Build != ClientVersionBuild.V4_2_2_14545)
                 guid = packet.ReadPackedGuid("Guid");
             else
-                guid = new WowGuid64();
+                guid = WowGuid64.Empty;
 
             ReadMovementInfo(packet, guid);
 

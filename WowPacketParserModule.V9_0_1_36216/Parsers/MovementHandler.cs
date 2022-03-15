@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using WowPacketParser.DBC;
-using WowPacketParser.Enums;
+﻿using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Parsing;
-using WowPacketParserModule.V7_0_3_22248.Enums;
-using CoreParsers = WowPacketParser.Parsing.Parsers;
-using MovementFlag = WowPacketParserModule.V6_0_2_19033.Enums.MovementFlag;
-using SplineFlag = WowPacketParserModule.V7_0_3_22248.Enums.SplineFlag;
 
 namespace WowPacketParserModule.V9_0_1_36216.Parsers
 {
@@ -72,6 +64,27 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                 packet.ReadUInt32("Unk901_1", i);
                 packet.ReadUInt32("Unk901_2", i);
             }
+        }
+
+        [Parser(Opcode.SMSG_MOVE_SET_COLLISION_HEIGHT)]
+        public static void HandleSetCollisionHeight(Packet packet)
+        {
+            packet.ReadPackedGuid128("MoverGUID");
+            packet.ReadInt32("SequenceIndex");
+            packet.ReadSingle("Height");
+            packet.ReadSingle("Scale");
+            packet.ReadByte("Reason");
+            packet.ReadUInt32("MountDisplayID");
+            packet.ReadInt32("ScaleDuration");
+        }
+
+        [Parser(Opcode.CMSG_MOVE_SET_COLLISION_HEIGHT_ACK)]
+        public static void HandleMoveSetCollisionHeightAck(Packet packet)
+        {
+            V7_0_3_22248.Parsers.MovementHandler.ReadMovementAck(packet, "MovementAck");
+            packet.ReadSingle("Height");
+            packet.ReadInt32("MountDisplayID");
+            packet.ReadByte("Reason");
         }
     }
 }

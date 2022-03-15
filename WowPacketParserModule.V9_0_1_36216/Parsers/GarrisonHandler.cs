@@ -175,6 +175,24 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                 ReadGarrisonEventEntry(packet, indexes, i);
         }
 
+        public static void ReadGarrisonSpecGroup(Packet packet, params object[] indexes)
+        {
+            packet.ReadInt32("ChrSpecializationID", indexes);
+            packet.ReadInt32("SoulbindID", indexes);
+        }
+
+        public static void ReadGarrisonStartMissionFollowerInfo(Packet packet, params object[] indexes)
+        {
+            packet.ReadUInt64("DatabaseID", indexes);
+            packet.ReadUInt32("BoardIndex", indexes);
+            packet.ReadUInt32("Health", indexes);
+            packet.ResetBitReader();
+
+            var hasFollowerEntry = packet.ReadBit("HasFollowerEntry", indexes);
+            if (hasFollowerEntry)
+                packet.ReadUInt32("FollowerEntry", indexes);
+        }
+
         [Parser(Opcode.SMSG_GET_GARRISON_INFO_RESULT)]
         public static void HandleGetGarrisonInfoResult(Packet packet)
         {
@@ -202,6 +220,11 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                 var talentsCount = packet.ReadUInt32("Talents", i);
                 var collectionsCount = packet.ReadUInt32("GarrisonCollectionCount", i);
                 var eventListCount = packet.ReadUInt32("GarrisonEventListCount", i);
+
+                uint specGroupsCount = 0;
+                if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_1_0_39185))
+                    specGroupsCount = packet.ReadUInt32("SpecGroupsCount", i);
+
                 var canStartMissionCount = packet.ReadUInt32("CanStartMission", i);
                 var archivedMissionsCount = packet.ReadUInt32("ArchivedMissionsCount", i);
 
@@ -241,6 +264,9 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
 
                 for (int j = 0; j < eventListCount; j++)
                     ReadGarrisonEventList(packet, i, "EventList", j);
+
+                for (int j = 0; j < specGroupsCount; j++)
+                    ReadGarrisonSpecGroup(packet, i, "SpecGroup", j);
 
                 for (int j = 0; j < archivedMissionsCount; j++)
                     packet.ReadInt32("ArchivedMissions", i, j);
@@ -304,6 +330,56 @@ namespace WowPacketParserModule.V9_0_1_36216.Parsers
                 packet.ResetBitReader();
                 packet.ReadBit("CanStart");
             }
+        }
+
+        [Parser(Opcode.SMSG_COVENANT_CALLINGS_AVAILABILITY_RESPONSE)]
+        public static void HandleGarrisonCovenantCallingsAvailability(Packet packet)
+        {
+            packet.ResetBitReader();
+            packet.ReadBit("AreCallingsUnlocked");
+            int bountyCount = packet.ReadInt32();
+
+            for (int i = 0; i < bountyCount; i++)
+                packet.ReadInt32("BountyID", i);
+        }
+
+        [Parser(Opcode.SMSG_COVENANT_RENOWN_OPEN_NPC)]
+        public static void HandleGarrisonCovenantRenownOpenNpc(Packet packet)
+        {
+            packet.ReadPackedGuid128("NpcGUID");
+
+            if (ClientVersion.AddedInVersion(ClientVersionBuild.V9_0_5_37503))
+            {
+                packet.ResetBitReader();
+                packet.ReadBit("CatchupState");
+            }
+        }
+
+        [Parser(Opcode.SMSG_COVENANT_RENOWN_SEND_CATCHUP_STATE)]
+        public static void HandleGarrisonCovenantRenownSendCatchupState(Packet packet)
+        {
+            packet.ResetBitReader();
+            packet.ReadBit("CatchupState");
+        }
+
+        [Parser(Opcode.CMSG_GARRISON_START_MISSION)]
+        public static void HandleGarrisonStartMission(Packet packet)
+        {
+            packet.ReadPackedGuid128("NpcGUID");
+
+            var infoCount = packet.ReadInt32("InfoCount");
+            packet.ReadInt32("MissionRecID");
+
+            for (int i = 0; i < infoCount; i++)
+                ReadGarrisonStartMissionFollowerInfo(packet, i, "FollowerInfo");
+        }
+        
+        [Parser(Opcode.SMSG_OPEN_ANIMA_DIVERSION_UI)]
+        public static void HandleAnimaOpenUI(Packet packet)
+        {
+            packet.ReadPackedGuid128("GUID");
+            packet.ReadInt32("UiMapID");
+            packet.ReadInt32("GarrTalentTreeID");
         }
     }
 }

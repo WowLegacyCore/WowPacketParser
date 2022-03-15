@@ -1,7 +1,7 @@
 using System;
 using WowPacketParser.Enums;
 using WowPacketParser.PacketStructures;
-using WoWPacketParser.Proto;
+using WowPacketParser.Proto;
 
 namespace WowPacketParser.Misc
 {
@@ -10,8 +10,6 @@ namespace WowPacketParser.Misc
         public ulong Low { get; protected set; }
         public HighGuid HighGuid { get; protected set; }
         public ulong High { get; protected set; }
-
-        public static WowGuid Empty = new WowGuid64(0);
 
         public bool HasEntry()
         {
@@ -179,14 +177,12 @@ namespace WowPacketParser.Misc
 
     public class WowGuid64 : WowGuid
     {
+        public static WowGuid Empty = new WowGuid64(0);
+
         public WowGuid64(ulong id)
         {
             Low = id;
             HighGuid = new HighGuidLegacy(GetHighGuidTypeLegacy());
-        }
-
-        public WowGuid64()
-        {
         }
 
         public override ulong GetLow()
@@ -220,14 +216,14 @@ namespace WowPacketParser.Misc
 
             if (ClientVersion.AddedInVersion(ClientVersionBuild.V4_0_1_13164))
                 return (uint)((Low & 0x000FFFFF00000000) >> 32);
-            return     (uint)((Low & 0x000FFFFFFF000000) >> 24);
+            return (uint)((Low & 0x000FFFFFFF000000) >> 24);
         }
 
         public override UniversalGuid ToUniversalGuid()
         {
             return this.ToUniversal();
         }
-        
+
         public HighGuidTypeLegacy GetHighGuidTypeLegacy()
         {
             if (Low == 0)

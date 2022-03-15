@@ -1,11 +1,10 @@
-using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.SQL;
 
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("quest_reward_display_spell")]
-    public sealed class QuestRewardDisplaySpell : IDataModel
+    public sealed record QuestRewardDisplaySpell : IDataModel
     {
         [DBFieldName("QuestID", true)]
         public uint? QuestID;

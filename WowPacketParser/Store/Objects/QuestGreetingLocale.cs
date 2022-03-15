@@ -1,11 +1,10 @@
-﻿using WowPacketParser.Loading;
-using WowPacketParser.Misc;
+﻿using WowPacketParser.Misc;
 using WowPacketParser.SQL;
 
 namespace WowPacketParser.Store.Objects
 {
     [DBTableName("quest_greeting_locale")]
-    public sealed class QuestGreetingLocale : IDataModel
+    public sealed record QuestGreetingLocale : IDataModel
     {
         [DBFieldName("ID", true)]
         public uint? ID;
